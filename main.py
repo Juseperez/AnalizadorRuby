@@ -85,7 +85,7 @@ def t_error(t):
 lexer = lex.lex()
 
 # Test it out
-data = ''' 44+3%
+data = ''' 45+3%
 3 + 4 * _ab + _if _if3 if + _print BEGIN
   + -20 *2 > < true
 '''

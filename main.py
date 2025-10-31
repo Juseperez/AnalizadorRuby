@@ -1,3 +1,4 @@
+import re
 import ply.lex as lex
 
 
@@ -9,57 +10,187 @@ reserved = {"_print":"PRINT",
             "BEGIN":"BEGINUPPER"
             }
 
-# List of token names.   This is always required
+# Lista de tokens
 tokens = (
-   'INTEGER',
-   'FLOAT',
-   'BOOLEAN',
-   'PLUS',
-   'MINUS',
-   'TIMES',
-   'DIVIDE',
-   'LPAREN',
-   'RPAREN',
-   'MODULE',
-   'LESSTHAN',
-   'GREATERTHAN',
+    # literales
+    'FLOAT', 'INTEGER', 'RATIONAL', 'COMPLEX',
+    'STR', 'SYMBOL', 'REGEXP',
+
+    # identificadores / variables
     'VARIABLE',
-    'ID',
-)+tuple(reserved.values())
 
-# Regular expression rules for simple tokens
-t_PLUS    = r'\+'
-t_MINUS   = r'-'
-t_TIMES   = r'\*'
-t_DIVIDE  = r'/'
-t_LPAREN  = r'\('
-t_RPAREN  = r'\)'
-t_MODULE  = r'%'
-t_LESSTHAN=r'<'
-t_GREATERTHAN=r'>'
+    # comparación
+    'LT', 'LE', 'GT', 'GE', 'EQ', 'NE', 'EQQ', 'CMP', 'MATCH', 'NMATCH',
 
+    # lógicos
+    'ANDAND', 'OROR', 'BANG',
 
-def t_BOOLEAN(t):
-    r'(true|false)'
+    # rangos
+    'RANGE_INCL', 'RANGE_EXCL',
+
+    # delimitadores / separadores
+    'LPAREN', 'RPAREN',
+    'LBRACKET', 'RBRACKET',
+    'LBRACE', 'RBRACE',
+    'COMMA', 'COLON', 'SEMICOLON', 'DOT', 'ARROW',
+) + tuple(sorted(set(reserved.values())))
+
+# Operadores multi-caracter
+
+def t_EQQ(t):
+    r'==='
     return t
 
+def t_EQ(t):
+    r'=='
+    return t
+
+def t_NE(t):
+    r'!='
+    return t
+
+def t_CMP(t):
+    r'<=>'
+    return t
+
+def t_MATCH(t):
+    r'=~'
+    return t
+
+def t_NMATCH(t):
+    r'!~'
+    return t
+
+def t_LE(t):
+    r'<='
+    return t
+
+def t_GE(t):
+    r'>='
+    return t
+
+def t_RANGE_EXCL(t):
+    r'\.\.\.'
+    return t
+
+def t_RANGE_INCL(t):
+    r'\.\.'
+    return t
+
+def t_ANDAND(t):
+    r'&&'
+    return t
+
+def t_OROR(t):
+    r'\|\|'
+    return t
+
+def t_ARROW(t):
+    r'=>'
+    return t
+
+# Operadores de Comparacion
+t_LT     = r'<'
+t_GT     = r'>'
+t_BANG   = r'!'
+t_DOT    = r'\.'
+
+t_LPAREN   = r'\('
+t_RPAREN   = r'\)'
+t_LBRACKET = r'\['
+t_RBRACKET = r'\]'
+t_LBRACE   = r'\{'
+t_RBRACE   = r'\}'
+t_COMMA    = r','
+t_COLON    = r':'
+t_SEMICOLON = r';'
+# Strings Ruby:
+# - "..." con escapes y \#\{...\} (interpolación no anidada aquí)
+# - '...' con escapes básicos
+# - %q/%Q con { }, ( ), [ ], < >
+#   Se implementa en una sola regex para cumplir con PLY.
+def t_STR(t):
+    r'"([^"\\]|\\.|\#\{[^}]*\})*"|\'([^\'\\]|\\.)*\'|%[Qq](\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|<[^>]*>)'
+    return t
+
+# Heredoc básico: <<LABEL, <<-LABEL, <<~LABEL
+# Tokenizado como STR
+def t_HEREDOC(t):
+    r'<<[-~]?[A-Za-z_]\w*'
+    m = re.match(r'<<(?:[-~]?)([A-Za-z_]\w*)', t.value)
+    label = m.group(1)
+    allow_indent = '-' in t.value or '~' in t.value
+    start = t.lexer.lexpos
+    data = t.lexer.lexdata
+
+    # saltar hasta fin de línea del inicio de heredoc
+    nl = data.find('\n', start)
+    if nl == -1:
+        t.type = 'STR'
+        t.value = ''
+        t.lexer.lexpos = start
+        return t
+    content_start = nl + 1
+
+    # patrón de terminación
+    if allow_indent:
+        end_pat = r'^[ \t]*' + re.escape(label) + r'[ \t]*\r?\n'
+    else:
+        end_pat = r'^' + re.escape(label) + r'[ \t]*\r?\n'
+
+    end_re = re.compile(end_pat, re.MULTILINE)
+    m_end = end_re.search(data, content_start)
+    if m_end:
+        content_end = m_end.start()
+        t.value = data[content_start:content_end]
+        t.type = 'STR'
+        t.lexer.lexpos = m_end.end()
+        # sumar líneas consumidas (contenido + línea del terminador)
+        t.lexer.lineno += t.value.count('\n') + 1
+        return t
+    else:
+        # sin terminador: consumir hasta el final
+        t.value = data[content_start:]
+        t.type = 'STR'
+        t.lexer.lexpos = len(data)
+        t.lexer.lineno += t.value.count('\n')
+        return t
+
+# Símbolos :ident o :"string con espacios"
+def t_SYMBOL(t):
+    r':([A-Za-z_]\w*|"(?:[^"\\]|\\.)*")'
+    return t
+
+# Expresiones regulares /.../flags  (colocar antes de DIVIDE)
+def t_REGEXP(t):
+    r'/([^/\\]|\\.)*/[imxounse]*'
+    return t
+
+# Identificadores / variables / constantes / métodos ? ! =
+# Incluye: @@foo, @foo, $foo, $1, CONSTANTE, local, foo?, bar!, baz=
+# y mapea a reservadas si corresponde.
 def t_VARIABLE(t):
-    r'_[a-z]\w*'
-    t.type=reserved.get(t.value, "VARIABLE")
+    r'(?:@@|@|\$)?[A-Za-z_]\w*[!?=]?|\$\d+|__[A-Z]+__'
+    t.type = reserved.get(t.value, 'VARIABLE')
     return t
 
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value,'ID')
+# Números: racionales y complejos simples
+def t_RATIONAL(t):
+    r'(?:\d+/\d+|\d+)r'
+    t.value = t.value
     return t
 
+def t_COMPLEX(t):
+    r'(?:\d+(?:\.\d+)?[+-]\d+(?:\.\d+)?i|\d+(?:\.\d+)?i)'
+    t.value = t.value
+    return t
 
 def t_FLOAT(t):
-    r'\d+\.\d+'
-    t.value = float(t.value)
+    r'\d+\.\d+(?:[eE][+-]?\d+)?'
+    # mantener semántica original (no castear a float)
+    t.value = t.value
     return t
 
-# A regular expression rule with some action code
 def t_INTEGER(t):
     r'\d+'
     t.value = int(t.value)

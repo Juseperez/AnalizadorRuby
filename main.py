@@ -2,13 +2,19 @@ import re
 import ply.lex as lex
 
 
-reserved = {"_print":"PRINT",
-            "_if":"IF",
-            "_while":"WHILE",
-            "_def":"DEF",
-            "_return":"RETURN",
-            "BEGIN":"BEGINUPPER"
+#cambio hecho por elias rubio git emrubio_85...
+reserved = {
+            "if": "IF", "while": "WHILE","def": "DEF", "return": "RETURN", "BEGIN": "BEGIN_U",
+            'else': 'ELSE', 'for': 'FOR', 'class': 'CLASS', 'nil': 'NIL', 'true': 'TRUE',
+            'false': 'FALSE', 'END': 'END_U', '__ENCODING__': 'ENCODING', 'begin': 'BEGIN_S',
+            '__LINE__': 'LINE', '__FILE__': 'FILE', 'alias': 'ALIAS', 'and': 'AND', 'break': 'BREAK',
+            'case': 'CASE', 'defined?': 'DEFINEDQ', 'do': 'DO', 'end': 'END_S', 'elsif': 'ELSIF',
+            'ensure': 'ENSURE', 'in': 'IN', 'module': 'MODULE', 'next': 'NEXT', 'not': 'NOT',
+            'or': 'OR', 'redo': 'REDO', 'rescue': 'RESCUE', 'retry': 'RETRY', 'self': 'SELF',
+            'super': 'SUPER', 'then': 'THEN', 'undef': 'UNDEF', 'unless': 'UNLESS', 'until': 'UNTIL',
+            'when': 'WHEN', 'yield': 'YIELD'
             }
+#...fin cambio hecho por elias rubio git emrubio_85
 
 # Lista de tokens
 tokens = (
@@ -33,6 +39,17 @@ tokens = (
     'LBRACKET', 'RBRACKET',
     'LBRACE', 'RBRACE',
     'COMMA', 'COLON', 'SEMICOLON', 'DOT', 'ARROW',
+
+    #cambio hecho por elias rubio git emrubio_85...
+
+    # operadores aritmeticos
+    'SUMA', 'RESTA', 'MULTI', 'DIV', 'MOD', 'POTE',  # POTE --> POTENCIACION
+
+
+    # operadores asignacion
+    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS',
+
+#...fin cambio hecho por elias rubio git emrubio_85
 ) + tuple(sorted(set(reserved.values())))
 
 # Operadores multi-caracter
@@ -89,6 +106,25 @@ def t_ARROW(t):
     r'=>'
     return t
 
+#cambio hecho por elias rubio git emrubio_85...
+def t_SUMAEQLS(t):
+    r'\+\='
+    return t
+def t_RESTAEQLS(t):
+    r'-\='
+    return t
+def t_MULTIEQLS(t):
+    r'\*\='
+    return t
+def t_DIVEQLS(t):
+    r'/\='
+    return t
+def t_MODEQLS(t):
+    r'%\='
+    return t
+#...fin cambio hecho por elias rubio git emrubio_85
+
+
 # Operadores de Comparacion
 t_LT     = r'<'
 t_GT     = r'>'
@@ -104,6 +140,19 @@ t_RBRACE   = r'\}'
 t_COMMA    = r','
 t_COLON    = r':'
 t_SEMICOLON = r';'
+
+#cambio hecho por elias rubio git emrubio_85...
+
+t_SUMA = r'\+'
+t_RESTA = r'-'
+t_MULTI = r'\*'
+t_DIV = r'/'
+t_MOD = r'%'
+t_POTE = r'\*\*'
+t_EQLS  = r'='
+
+#...fin cambio hecho por elias rubio git emrubio_85
+
 # Strings Ruby:
 # - "..." con escapes y \#\{...\} (interpolación no anidada aquí)
 # - '...' con escapes básicos

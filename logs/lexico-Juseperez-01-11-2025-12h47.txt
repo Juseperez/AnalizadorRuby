@@ -1,0 +1,27 @@
+Log de análisis léxico del algoritmo: algoritmos\algoritmo3J.rb
+Fecha y hora: 01-11-2025-12h47
+
+Token: INTEGER	Valor: 45	Línea: 1
+Token: SUMA	Valor: +	Línea: 1
+Token: INTEGER	Valor: 3	Línea: 1
+Token: MOD	Valor: %	Línea: 1
+Token: INTEGER	Valor: 3	Línea: 2
+Token: SUMA	Valor: +	Línea: 2
+Token: INTEGER	Valor: 4	Línea: 2
+Token: MULTI	Valor: *	Línea: 2
+Token: VARIABLE	Valor: _ab	Línea: 2
+Token: SUMA	Valor: +	Línea: 2
+Token: VARIABLE	Valor: _if	Línea: 2
+Token: VARIABLE	Valor: _if3	Línea: 2
+Token: IF	Valor: if	Línea: 2
+Token: SUMA	Valor: +	Línea: 2
+Token: VARIABLE	Valor: _print	Línea: 2
+Token: BEGIN_U	Valor: BEGIN	Línea: 2
+Token: SUMA	Valor: +	Línea: 3
+Token: RESTA	Valor: -	Línea: 3
+Token: INTEGER	Valor: 20	Línea: 3
+Token: MULTI	Valor: *	Línea: 3
+Token: INTEGER	Valor: 2	Línea: 3
+Token: GT	Valor: >	Línea: 3
+Token: LT	Valor: <	Línea: 3
+Token: TRUE	Valor: true	Línea: 3

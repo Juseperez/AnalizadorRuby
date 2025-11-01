@@ -1,6 +1,7 @@
 import re
 import ply.lex as lex
-
+import os
+import datetime
 
 #cambio hecho por elias rubio git emrubio_85...
 reserved = {
@@ -51,6 +52,8 @@ tokens = (
 
 #...fin cambio hecho por elias rubio git emrubio_85
 ) + tuple(sorted(set(reserved.values())))
+
+errores_lexicos = []
 
 # Operadores multi-caracter
 
@@ -246,7 +249,34 @@ def t_INTEGER(t):
     return t
 
 
+#----------------
+#Aporte Juseperez
+#----------------
 
+#Comentarios
+
+def t_comment_single(t):
+    r'\#.*'
+    pass
+
+# Comentarios de bloque: =begin ... =end (líneas propias)
+states = (('MLC','exclusive'),)
+t_MLC_ignore = ' \t'
+def t_begin_mlc(t):
+    r'=begin[^\n]*\n'
+    t.lexer.push_state('MLC')
+
+def t_MLC_end(t):
+    r'\n=end[^\n]*'
+    t.lexer.pop_state()
+
+def t_MLC_any(t):
+    r'.'
+    pass
+
+def t_MLC_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
 
 # Define a rule so we can track line numbers
 def t_newline(t):
@@ -258,24 +288,75 @@ t_ignore  = ' \t'
 
 # Error handling rule
 def t_error(t):
-    print(f"Componente léxico {t.value[0]} no existe en este lenguaje")
+    mensaje_error =f"Componente léxico {t.value[0]} no existe en Ruby en la línea {t.lexer.lineno}"
+    print(mensaje_error)
+    errores_lexicos.append(mensaje_error)
     t.lexer.skip(1)
 
-# Build the lexer
-lexer = lex.lex()
+def t_MLC_error(t):
+    t.lexer.skip(1)
+def analizar_archivo(nombre_archivo, usuario):
+    lexer = lex.lex()
 
-# Test it out
-data = ''' 45+3%
-3 + 4 * _ab + _if _if3 if + _print BEGIN
-  + -20 *2 > < true
-'''
+    #Rutas de carpetas
+    carpeta_algoritmos = "algoritmos"
+    carpeta_logs = "logs"
 
-# Give the lexer some input
-lexer.input(data)
+    # Crear carpetas si no existen
+    os.makedirs(carpeta_algoritmos, exist_ok=True)
+    os.makedirs(carpeta_logs, exist_ok=True)
 
-# Tokenize
-while True:
-    tok = lexer.token()
-    if not tok:
-        break      # No more input
-    print(tok)
+    # Ruta completa del archivo Ruby
+    ruta_archivo = os.path.join(carpeta_algoritmos, nombre_archivo)
+
+    # Leer archivo Ruby
+    try:
+        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+            data = f.read()
+    except FileNotFoundError:
+        print(f"[ERROR] No se encontró el archivo: {ruta_archivo}")
+        return
+
+    lexer.input(data)
+
+    # Crear nombre de log
+    ahora = datetime.datetime.now().strftime("%d-%m-%Y-%Hh%M")
+    nombre_log = f"lexico-{usuario}-{ahora}.txt"
+    ruta_log = os.path.join(carpeta_logs, nombre_log)
+
+    # Escribir log
+    with open(ruta_log, 'w', encoding='utf-8') as log:
+        log.write(f"Log de análisis léxico del algoritmo: {ruta_archivo}\n")
+        log.write(f"Usuario: {usuario}\n")
+        log.write(f"Fecha y hora: {ahora}\n\n")
+
+        while True:
+            tok = lexer.token()
+            if not tok:
+                break
+            log.write(f"Token: {tok.type}\tValor: {tok.value}\tLínea: {tok.lineno}\n")
+            print(tok)
+
+        if errores_lexicos:
+            log.write("\nERRORES LÉXICOS DETECTADOS\n")
+            for e in errores_lexicos:
+                log.write(f"{e}\n")
+
+    print(f"Log creado en: {ruta_log}")
+
+if __name__ == "__main__":
+    print("Seleccione el algoritmo a analizar:")
+    print("1 - algoritmo1E.rb (emrubio85)")
+    print("2 - algoritmo2B.rb (BrayanBriones)")
+    print("3 - algoritmo3J.rb (Juseperez)")
+
+    opcion = input("Ingrese su opción: ").strip()
+
+    if opcion == "1":
+        analizar_archivo("algoritmo1E.rb", "emrubio85")
+    elif opcion == "2":
+        analizar_archivo("algoritmo2B.rb", "BrayanBriones")
+    elif opcion == "3":
+        analizar_archivo("algoritmo3J.rb", "Juseperez")
+    else:
+        print("Opción no válida.")

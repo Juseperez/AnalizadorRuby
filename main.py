@@ -1,9 +1,9 @@
 import re
 import ply.lex as lex
 import os
-import datetime
-from zoneinfo import ZoneInfo
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
 
 #cambio hecho por elias rubio git emrubio_85...
 reserved = {
@@ -322,8 +322,8 @@ def analizar_archivo(nombre_archivo, usuario):
     lexer.input(data)
 
     # Crear nombre de log
-    #ahora = datetime.datetime.now().strftime("%d-%m-%Y-%Hh%M")
-    ahora = datetime.now(ZoneInfo("America/Guayaquil")).strftime("%d-%m-%Y-%Hh%M")
+    ahora = datetime.now().strftime("%d-%m-%Y-%Hh%M")
+    #ahora = datetime.now(ZoneInfo("America/Guayaquil")).strftime("%d-%m-%Y-%Hh%M") #Solo activar en github Codespace
     nombre_log = f"lexico-{usuario}-{ahora}.txt"
     ruta_log = os.path.join(carpeta_logs, nombre_log)
 

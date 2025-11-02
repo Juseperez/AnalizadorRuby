@@ -1,0 +1,84 @@
+Log de análisis léxico del algoritmo: algoritmos/algoritmo1E.rb
+Usuario: emrubio85
+Fecha y hora: 02-11-2025-00h37
+
+Token: LPAREN	Valor: (	Línea: 3
+Token: INTEGER	Valor: 1	Línea: 3
+Token: RANGE_INCL	Valor: ..	Línea: 3
+Token: INTEGER	Valor: 5	Línea: 3
+Token: RPAREN	Valor: )	Línea: 3
+Token: DOT	Valor: .	Línea: 3
+Token: VARIABLE	Valor: to_a	Línea: 3
+Token: LPAREN	Valor: (	Línea: 4
+Token: INTEGER	Valor: 1	Línea: 4
+Token: RANGE_EXCL	Valor: ...	Línea: 4
+Token: INTEGER	Valor: 5	Línea: 4
+Token: RPAREN	Valor: )	Línea: 4
+Token: DOT	Valor: .	Línea: 4
+Token: VARIABLE	Valor: to_a	Línea: 4
+Token: VARIABLE	Valor: a	Línea: 7
+Token: COMMA	Valor: ,	Línea: 7
+Token: VARIABLE	Valor: b	Línea: 7
+Token: EQLS	Valor: =	Línea: 7
+Token: LBRACKET	Valor: [	Línea: 7
+Token: INTEGER	Valor: 1	Línea: 7
+Token: COMMA	Valor: ,	Línea: 7
+Token: INTEGER	Valor: 2	Línea: 7
+Token: RBRACKET	Valor: ]	Línea: 7
+Token: VARIABLE	Valor: c	Línea: 8
+Token: COMMA	Valor: ,	Línea: 8
+Token: MULTI	Valor: *	Línea: 8
+Token: VARIABLE	Valor: rest	Línea: 8
+Token: EQLS	Valor: =	Línea: 8
+Token: LBRACKET	Valor: [	Línea: 8
+Token: INTEGER	Valor: 3	Línea: 8
+Token: COMMA	Valor: ,	Línea: 8
+Token: INTEGER	Valor: 4	Línea: 8
+Token: COMMA	Valor: ,	Línea: 8
+Token: INTEGER	Valor: 5	Línea: 8
+Token: RBRACKET	Valor: ]	Línea: 8
+Token: VARIABLE	Valor: d	Línea: 9
+Token: EQLS	Valor: =	Línea: 9
+Token: LBRACE	Valor: {	Línea: 9
+Token: VARIABLE	Valor: x	Línea: 9
+Token: COLON	Valor: :	Línea: 9
+Token: INTEGER	Valor: 1	Línea: 9
+Token: COMMA	Valor: ,	Línea: 9
+Token: VARIABLE	Valor: y	Línea: 9
+Token: COLON	Valor: :	Línea: 9
+Token: INTEGER	Valor: 2	Línea: 9
+Token: RBRACE	Valor: }	Línea: 9
+Token: VARIABLE	Valor: e	Línea: 10
+Token: EQLS	Valor: =	Línea: 10
+Token: POTE	Valor: **	Línea: 10
+Token: LBRACE	Valor: {	Línea: 10
+Token: VARIABLE	Valor: z	Línea: 10
+Token: COLON	Valor: :	Línea: 10
+Token: INTEGER	Valor: 3	Línea: 10
+Token: RBRACE	Valor: }	Línea: 10
+Token: RESCUE	Valor: rescue	Línea: 10
+Token: NIL	Valor: nil	Línea: 10
+Token: SYMBOL	Valor: :foo	Línea: 13
+Token: SYMBOL	Valor: :"bar-baz"	Línea: 14
+Token: SYMBOL	Valor: :"with spaces"	Línea: 15
+Token: COLON	Valor: :	Línea: 16
+Token: SUMA	Valor: +	Línea: 16
+Token: COLON	Valor: :	Línea: 17
+Token: RESTA	Valor: -	Línea: 17
+Token: COLON	Valor: :	Línea: 18
+Token: EQ	Valor: ==	Línea: 18
+Token: VARIABLE	Valor: str	Línea: 20
+Token: EQLS	Valor: =	Línea: 20
+Token: B_LEFT_SHIFT	Valor: <<	Línea: 20
+Token: B_ONES	Valor: ~	Línea: 20
+Token: VARIABLE	Valor: RUBY	Línea: 20
+Token: IF	Valor: if	Línea: 21
+Token: TRUE	Valor: true	Línea: 21
+Token: VARIABLE	Valor: x	Línea: 22
+Token: SUMAEQLS	Valor: +=	Línea: 22
+Token: INTEGER	Valor: 1	Línea: 22
+Token: END_S	Valor: end	Línea: 23
+Token: VARIABLE	Valor: RUBY	Línea: 24
+
+ERRORES LÉXICOS DETECTADOS
+Componente léxico @ no existe en Ruby en la línea 17

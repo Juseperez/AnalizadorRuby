@@ -1,0 +1,19 @@
+Log de análisis léxico del algoritmo: algoritmos/algoritmo1E.rb
+Usuario: emrubio85
+Fecha y hora: 02-11-2025-00h56
+
+Token: DEFINEDQ	Valor: defined?	Línea: 1
+Token: VARIABLE	Valor: foo	Línea: 1
+Token: LINE	Valor: __LINE__	Línea: 2
+Token: FILE	Valor: __FILE__	Línea: 3
+Token: TRUE	Valor: true	Línea: 4
+Token: SEMICOLON	Valor: ;	Línea: 4
+Token: FALSE	Valor: false	Línea: 4
+Token: SEMICOLON	Valor: ;	Línea: 4
+Token: NIL	Valor: nil	Línea: 4
+Token: INTEGER	Valor: 1	Línea: 6
+Token: B_LEFT_SHIFT	Valor: <<	Línea: 6
+Token: INTEGER	Valor: 2	Línea: 6
+Token: INTEGER	Valor: 4	Línea: 7
+Token: B_RIGHT_SHIFT	Valor: >>	Línea: 7
+Token: INTEGER	Valor: 1	Línea: 7

@@ -48,9 +48,11 @@ tokens = (
     # operadores aritmeticos
     'SUMA', 'RESTA', 'MULTI', 'DIV', 'MOD', 'POTE',  # POTE --> POTENCIACION
 
+    # operadores logicos bitwise
+    'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT',
 
     # operadores asignacion
-    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS',
+    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS', 'POTEQLS', 'QUESTION'
 
 #...fin cambio hecho por elias rubio git emrubio_85
 ) + tuple(sorted(set(reserved.values())))
@@ -121,12 +123,22 @@ def t_RESTAEQLS(t):
 def t_MULTIEQLS(t):
     r'\*\='
     return t
+def t_POTEQLS(t):
+    r'\*\*\='
+    return t
 def t_DIVEQLS(t):
     r'/\='
     return t
 def t_MODEQLS(t):
     r'%\='
     return t
+def t_B_RIGHT_SHIFT(t):
+    r'>>'
+    return t
+def t_B_LEFT_SHIFT(t):
+    r'<<'
+    return t
+
 #...fin cambio hecho por elias rubio git emrubio_85
 
 
@@ -155,7 +167,11 @@ t_DIV = r'/'
 t_MOD = r'%'
 t_POTE = r'\*\*'
 t_EQLS  = r'='
-
+t_B_AND = r'&'
+t_B_OR = r'\|'
+t_B_XOR = r'\^'
+t_B_ONES = r'~'
+t_QUESTION = r'\?'
 #...fin cambio hecho por elias rubio git emrubio_85
 
 # Strings Ruby:

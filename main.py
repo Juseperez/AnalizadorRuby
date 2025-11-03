@@ -19,7 +19,7 @@ reserved = {
             }
 #...fin cambio hecho por elias rubio git emrubio_85
 
-# Lista de tokens
+# Lista de tokens creada por Brayan Briones git BrayanBriones
 tokens = (
     # literales
     'FLOAT', 'INTEGER', 'RATIONAL', 'COMPLEX',
@@ -62,7 +62,7 @@ tokens = (
 
 errores_lexicos = []
 
-# Operadores multi-caracter
+# Operadores multi-caracter creados por Brayan Briones git BrayanBriones
 
 def t_EQQ(t):
     r'==='
@@ -145,7 +145,7 @@ def t_B_LEFT_SHIFT(t):
 #...fin cambio hecho por elias rubio git emrubio_85
 
 
-# Operadores de Comparacion
+# Operadores de Comparacion creados por Brayan Briones git BrayanBriones
 t_LT     = r'<'
 t_GT     = r'>'
 t_BANG   = r'!'
@@ -178,7 +178,7 @@ t_B_ONES = r'~'
 t_QUESTION = r'\?'
 #...fin cambio hecho por elias rubio git emrubio_85
 
-# Strings Ruby:
+# String Ruby creado por Brayan Briones git BrayanBriones:
 # - "..." con escapes y \#\{...\} (interpolación no anidada aquí)
 # - '...' con escapes básicos
 # - %q/%Q con { }, ( ), [ ], < >
@@ -195,7 +195,7 @@ def t_STR(t):
     return t
 
 # Heredoc básico: <<LABEL, <<-LABEL, <<~LABEL
-# Tokenizado como STR
+# Tokenizado como STR creado por Brayan Briones git BrayanBriones
 def t_HEREDOC(t):
     r'<<[-~]?[A-Za-z_]\w*'
     m = re.match(r'<<(?:[-~]?)([A-Za-z_]\w*)', t.value)
@@ -247,7 +247,7 @@ def t_REGEXP(t):
     r'/([^/\\]|\\.)*/[imxounse]*'
     return t
 
-# Identificadores / variables / constantes / métodos ? ! =
+# Identificadores / variables / constantes / métodos ? ! = creados por Brayan Briones git BrayanBriones
 # Incluye: @@foo, @foo, $foo, $1, CONSTANTE, local, foo?, bar!, baz=
 # y mapea a reservadas si corresponde.
 def t_VARIABLE(t):

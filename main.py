@@ -15,7 +15,7 @@ reserved = {
             'ensure': 'ENSURE', 'in': 'IN', 'module': 'MODULE', 'next': 'NEXT', 'not': 'NOT',
             'or': 'OR', 'redo': 'REDO', 'rescue': 'RESCUE', 'retry': 'RETRY', 'self': 'SELF',
             'super': 'SUPER', 'then': 'THEN', 'undef': 'UNDEF', 'unless': 'UNLESS', 'until': 'UNTIL',
-            'when': 'WHEN', 'yield': 'YIELD'
+            'when': 'WHEN', 'yield': 'YIELD', "print": "PRINT", "puts": "PUTS",
             }
 #...fin cambio hecho por elias rubio git emrubio_85
 
@@ -37,11 +37,6 @@ tokens = (
     # rangos
     'RANGE_INCL', 'RANGE_EXCL',
 
-    # delimitadores / separadores
-    'LPAREN', 'RPAREN',
-    'LBRACKET', 'RBRACKET',
-    'LBRACE', 'RBRACE',
-    'COMMA', 'COLON', 'SEMICOLON', 'DOT', 'ARROW',
 
     #cambio hecho por elias rubio git emrubio_85...
 
@@ -52,7 +47,15 @@ tokens = (
     'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT',
 
     # operadores asignacion
-    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS', 'POTEQLS', 'QUESTION'
+    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS', 'POTEQLS', 'QUESTION',
+
+    # delimitadores Juseperez
+    'LPAREN', 'RPAREN',
+    'LBRACKET', 'RBRACKET',
+    'LBRACE', 'RBRACE',
+    'COMMA', 'COLON', 'SEMICOLON', 'DOT', 'ARROW',
+    #'NEW_LINE',
+    'INTERPOLATION',
 
 #...fin cambio hecho por elias rubio git emrubio_85
 ) + tuple(sorted(set(reserved.values())))
@@ -148,6 +151,7 @@ t_GT     = r'>'
 t_BANG   = r'!'
 t_DOT    = r'\.'
 
+#Delimitadores Juseperez
 t_LPAREN   = r'\('
 t_RPAREN   = r'\)'
 t_LBRACKET = r'\['
@@ -179,6 +183,13 @@ t_QUESTION = r'\?'
 # - '...' con escapes básicos
 # - %q/%Q con { }, ( ), [ ], < >
 #   Se implementa en una sola regex para cumplir con PLY.
+
+#Juseperez Interpolación
+def t_INTERPOLATION(t):
+    r'\#\{[^}]*\}'
+    return t
+
+
 def t_STR(t):
     r'"([^"\\]|\\.|\#\{[^}]*\})*"|\'([^\'\\]|\\.)*\'|%[Qq](\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|<[^>]*>)'
     return t
@@ -295,6 +306,17 @@ def t_MLC_any(t):
 def t_MLC_newline(t):
     r'\n+'
     t.lexer.lineno += len(t.value)
+
+    #Salto de línea
+
+'''def t_NEW_LINE(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+    t.value = "\\n"
+    return t
+    '''
+
+
 
 # Define a rule so we can track line numbers
 def t_newline(t):

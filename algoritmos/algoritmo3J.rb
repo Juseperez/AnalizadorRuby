@@ -1,12 +1,26 @@
-°
+
 #Prueba Comentarios
-45+3%
+
 #Comentario
-3 + 4 * _ab + _if _if3 if + _print BEGIN
+
+#Delimitadores
+x=5
+y=10; z=x+y
+
+parentesis=(1+x)
+puts "La suma de #{x} y #{y} es #{z}"
+
+persona = { nombre: "Juan", edad: 20}
+puts persona[:nombre]
+
+arreglo = [10, 20, 30]
+
 =begin
 Este es un comentario
 de bloque
 =end
-  + -20 *2 > < true
 
+do
+end
+#Error a propósito
 °

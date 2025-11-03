@@ -1,0 +1,61 @@
+Log de análisis léxico del algoritmo: algoritmos\algoritmo3J.rb
+Usuario: Juseperez
+Fecha y hora: 02-11-2025-20h40
+
+Token: NEW_LINE	Valor: \n	Línea: 1
+Token: NEW_LINE	Valor: \n	Línea: 2
+Token: NEW_LINE	Valor: \n	Línea: 4
+Token: NEW_LINE	Valor: \n	Línea: 6
+Token: VARIABLE	Valor: x=	Línea: 7
+Token: INTEGER	Valor: 5	Línea: 7
+Token: NEW_LINE	Valor: \n	Línea: 7
+Token: VARIABLE	Valor: y=	Línea: 8
+Token: INTEGER	Valor: 10	Línea: 8
+Token: SEMICOLON	Valor: ;	Línea: 8
+Token: VARIABLE	Valor: z=	Línea: 8
+Token: VARIABLE	Valor: x	Línea: 8
+Token: SUMA	Valor: +	Línea: 8
+Token: VARIABLE	Valor: y	Línea: 8
+Token: NEW_LINE	Valor: \n	Línea: 8
+Token: VARIABLE	Valor: parentesis=	Línea: 10
+Token: LPAREN	Valor: (	Línea: 10
+Token: INTEGER	Valor: 1	Línea: 10
+Token: SUMA	Valor: +	Línea: 10
+Token: VARIABLE	Valor: x	Línea: 10
+Token: RPAREN	Valor: )	Línea: 10
+Token: NEW_LINE	Valor: \n	Línea: 10
+Token: PUTS	Valor: puts	Línea: 11
+Token: STR	Valor: "La suma de #{x} y #{y} es #{z}"	Línea: 11
+Token: NEW_LINE	Valor: \n	Línea: 11
+Token: VARIABLE	Valor: persona	Línea: 13
+Token: EQLS	Valor: =	Línea: 13
+Token: LBRACE	Valor: {	Línea: 13
+Token: VARIABLE	Valor: nombre	Línea: 13
+Token: COLON	Valor: :	Línea: 13
+Token: STR	Valor: "Juan"	Línea: 13
+Token: COMMA	Valor: ,	Línea: 13
+Token: VARIABLE	Valor: edad	Línea: 13
+Token: COLON	Valor: :	Línea: 13
+Token: INTEGER	Valor: 20	Línea: 13
+Token: RBRACE	Valor: }	Línea: 13
+Token: NEW_LINE	Valor: \n	Línea: 13
+Token: PUTS	Valor: puts	Línea: 14
+Token: VARIABLE	Valor: persona	Línea: 14
+Token: LBRACKET	Valor: [	Línea: 14
+Token: SYMBOL	Valor: :nombre	Línea: 14
+Token: RBRACKET	Valor: ]	Línea: 14
+Token: NEW_LINE	Valor: \n	Línea: 14
+Token: VARIABLE	Valor: arreglo	Línea: 16
+Token: EQLS	Valor: =	Línea: 16
+Token: LBRACKET	Valor: [	Línea: 16
+Token: INTEGER	Valor: 10	Línea: 16
+Token: COMMA	Valor: ,	Línea: 16
+Token: INTEGER	Valor: 20	Línea: 16
+Token: COMMA	Valor: ,	Línea: 16
+Token: INTEGER	Valor: 30	Línea: 16
+Token: RBRACKET	Valor: ]	Línea: 16
+Token: NEW_LINE	Valor: \n	Línea: 16
+Token: NEW_LINE	Valor: \n	Línea: 19
+Token: DO	Valor: do	Línea: 21
+Token: NEW_LINE	Valor: \n	Línea: 21
+Token: END_S	Valor: end	Línea: 22

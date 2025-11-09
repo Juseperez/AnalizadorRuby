@@ -25,8 +25,9 @@ tokens = (
     'FLOAT', 'INTEGER', 'RATIONAL', 'COMPLEX',
     'STR', 'SYMBOL', 'REGEXP',
 
-    # identificadores / variables
-    'VARIABLE',
+    # identificadores / variables (separados por tipo)
+    'GLOBAL_VAR', 'LOCAL_VAR', 'INSTANCE_VAR', 'CLASS_VAR', 'CONSTANT',
+
 
     # comparación
     'LT', 'LE', 'GT', 'GE', 'EQ', 'NE', 'EQQ', 'CMP', 'MATCH', 'NMATCH',
@@ -37,17 +38,16 @@ tokens = (
     # rangos
     'RANGE_INCL', 'RANGE_EXCL',
 
-
     #cambio hecho por elias rubio git emrubio_85...
 
     # operadores aritmeticos
-    'SUMA', 'RESTA', 'MULTI', 'DIV', 'MOD', 'POTE',  # POTE --> POTENCIACION
+    'PLUS', 'MINUS', 'MULT', 'DIV', 'MOD', 'POWER',  # Power --> POTENCIACION
 
     # operadores logicos bitwise
     'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT',
 
     # operadores asignacion
-    'EQLS', 'SUMAEQLS', 'RESTAEQLS', 'MULTIEQLS', 'DIVEQLS', 'MODEQLS', 'POTEQLS', 'QUESTION',
+    'EQLS', 'PLUSEQLS', 'MINUSEQLS', 'MULTEQLS', 'DIVEQLS', 'MODEQLS', 'POWEREQLS', 'QUESTION',
 
     # delimitadores Juseperez
     'LPAREN', 'RPAREN',
@@ -117,16 +117,16 @@ def t_ARROW(t):
     return t
 
 #cambio hecho por elias rubio git emrubio_85...
-def t_SUMAEQLS(t):
+def t_PLUSEQLS(t):
     r'\+\='
     return t
-def t_RESTAEQLS(t):
+def t_MINUSEQLS(t):
     r'-\='
     return t
-def t_MULTIEQLS(t):
+def t_MULTEQLS(t):
     r'\*\='
     return t
-def t_POTEQLS(t):
+def t_POWEREQLS(t):
     r'\*\*\='
     return t
 def t_DIVEQLS(t):
@@ -248,11 +248,32 @@ def t_REGEXP(t):
     return t
 
 # Identificadores / variables / constantes / métodos ? ! = creados por Brayan Briones git BrayanBriones
-# Incluye: @@foo, @foo, $foo, $1, CONSTANTE, local, foo?, bar!, baz=
-# y mapea a reservadas si corresponde.
-def t_VARIABLE(t):
-    r'(?:@@|@|\$)?[A-Za-z_]\w*[!?=]?|\$\d+|__[A-Z]+__'
-    t.type = reserved.get(t.value, 'VARIABLE')
+# Se separan por tipo: CLASS_VAR (@@), INSTANCE_VAR (@), GLOBAL_VAR ($), CONSTANT (Mayúsculas), LOCAL_VAR (identificador normal).
+# Las palabras reservadas se asignan desde 'reserved' para LOCAL_VAR.
+def t_CLASS_VAR(t):
+    r'@@[A-Za-z_]\w*'
+    return t
+
+def t_INSTANCE_VAR(t):
+    r'@[A-Za-z_]\w*'
+    return t
+
+def t_GLOBAL_VAR(t):
+    r'\$(?:[A-Za-z_]\w*|\d+)'
+    return t
+
+def t_CONSTANT(t):
+    r'__?[A-Z][A-Za-z_]\w*__?|[A-Z][A-Za-z_]\w*'
+    # Mantener tokens especiales como __ENCODING__ si están en reserved
+    if t.value in reserved:
+        t.type = reserved[t.value]
+    return t
+
+def t_LOCAL_VAR(t):
+    r'[A-Za-z_]\w*[!?=]?'
+    # mapear a palabra reservada si corresponde (e.g., if, while, def)
+    if t.value in reserved:
+        t.type = reserved[t.value]
     return t
 
 # Números: racionales y complejos simples

@@ -189,6 +189,11 @@ def t_INTERPOLATION(t):
     r'\#\{[^}]*\}'
     return t
 
+#Comentarios
+
+def t_comment_single(t):
+    r'\#.*'
+    pass 
 
 def t_STR(t):
     r'"([^"\\]|\\.|\#\{[^}]*\})*"|\'([^\'\\]|\\.)*\'|%[Qq](\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|<[^>]*>)'
@@ -303,11 +308,6 @@ def t_INTEGER(t):
 #Aporte Juseperez
 #----------------
 
-#Comentarios
-
-def t_comment_single(t):
-    r'\#.*'
-    pass
 
 # Comentarios de bloque: =begin ... =end (líneas propias)
 states = (('MLC','exclusive'),)

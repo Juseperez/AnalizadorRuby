@@ -1,0 +1,10 @@
+LOG de análisis sintáctico: algoritmos/algoritmo4B.rb
+Usuario: BrayanBriones
+Fecha y hora: 10112025-22h00
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token 'do' en la línea 48
+- Error de sintaxis con el token ',' en la línea 56
+- Error de sintaxis con el token '$nombre' en la línea 68
+- Error de sintaxis con el token '*' en la línea 71
+- Error de sintaxis al final de la entrada

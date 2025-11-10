@@ -1,0 +1,6 @@
+LOG de análisis sintáctico: algoritmos/algoritmo4B.rb
+Usuario: BrayanBriones
+Fecha y hora: 10112025-21h53
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token '{' en la línea 7

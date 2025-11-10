@@ -1,0 +1,36 @@
+LOG de análisis sintáctico: algoritmos/algoritmo2B.rb
+Usuario: BrayanBriones
+Fecha y hora: 10112025-22h13
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token ')' en la línea 32
+- Error de sintaxis con el token '}' en la línea 33
+- Error de sintaxis con el token '<<' en la línea 41
+- Error de sintaxis con el token '<<' en la línea 46
+- Error de sintaxis con el token '==' en la línea 62
+- Error de sintaxis con el token '===' en la línea 63
+- Error de sintaxis con el token '!=' en la línea 64
+- Error de sintaxis con el token '<=>' en la línea 65
+- Error de sintaxis con el token '=~' en la línea 66
+- Error de sintaxis con el token '!~' en la línea 67
+- Error de sintaxis con el token '..' en la línea 70
+- Error de sintaxis con el token '...' en la línea 71
+- Error de sintaxis con el token '&' en la línea 75
+- Error de sintaxis con el token '|' en la línea 76
+- Error de sintaxis con el token '^' en la línea 77
+- Error de sintaxis con el token '~' en la línea 78
+- Error de sintaxis con el token '<<' en la línea 79
+- Error de sintaxis con el token '>>' en la línea 80
+- Error de sintaxis con el token '=' en la línea 88
+- Error de sintaxis con el token '[' en la línea 96
+- Error de sintaxis con el token '<' en la línea 100
+- Error de sintaxis con el token 'true' en la línea 101
+- Error de sintaxis con el token '1' en la línea 104
+- Error de sintaxis con el token 'if' en la línea 105
+- Error de sintaxis con el token 'end' en la línea 117
+- Error de sintaxis con el token '.' en la línea 119
+- Error de sintaxis con el token '.' en la línea 120
+- Error de sintaxis con el token 'for' en la línea 129
+- Error de sintaxis con el token 'end' en la línea 131
+- Error de sintaxis con el token 'ensure' en la línea 137
+- Error de sintaxis con el token 'nil' en la línea 150

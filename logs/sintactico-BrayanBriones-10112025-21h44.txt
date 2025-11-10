@@ -1,0 +1,8 @@
+LOG de análisis sintáctico: algoritmos/algoritmo4B.rb
+Usuario: BrayanBriones
+Fecha y hora: 10112025-21h44
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token 'print' en la línea 3
+- Error de sintaxis con el token '*' en la línea 21
+- Error de sintaxis con el token 'end' en la línea 27

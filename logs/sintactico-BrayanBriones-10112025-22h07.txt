@@ -1,0 +1,6 @@
+LOG de análisis sintáctico: algoritmos/algoritmo4B.rb
+Usuario: BrayanBriones
+Fecha y hora: 10112025-22h07
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis al final de la entrada

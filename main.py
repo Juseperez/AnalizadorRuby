@@ -1,411 +1,78 @@
-import re
-import ply.lex as lex
+import ply.yacc as yacc
+from lexico import tokens
 import os
-from datetime import datetime
-from zoneinfo import ZoneInfo
+import datetime
 
 
-#cambio hecho por elias rubio git emrubio_85...
-reserved = {
-            "if": "IF", "while": "WHILE","def": "DEF", "return": "RETURN", "BEGIN": "BEGIN_U",
-            'else': 'ELSE', 'for': 'FOR', 'class': 'CLASS', 'nil': 'NIL', 'true': 'TRUE',
-            'false': 'FALSE', 'END': 'END_U', '__ENCODING__': 'ENCODING', 'begin': 'BEGIN_S',
-            '__LINE__': 'LINE', '__FILE__': 'FILE', 'alias': 'ALIAS', 'and': 'AND', 'break': 'BREAK',
-            'case': 'CASE', 'defined?': 'DEFINEDQ', 'do': 'DO', 'end': 'END_S', 'elsif': 'ELSIF',
-            'ensure': 'ENSURE', 'in': 'IN', 'module': 'MODULE', 'next': 'NEXT', 'not': 'NOT',
-            'or': 'OR', 'redo': 'REDO', 'rescue': 'RESCUE', 'retry': 'RETRY', 'self': 'SELF',
-            'super': 'SUPER', 'then': 'THEN', 'undef': 'UNDEF', 'unless': 'UNLESS', 'until': 'UNTIL',
-            'when': 'WHEN', 'yield': 'YIELD', "print": "PRINT", "puts": "PUTS",
-            }
-#...fin cambio hecho por elias rubio git emrubio_85
+errores_sintacticos = []
+def p_expresion_suma(p):
+    'expresion : valor PLUS valor'
+    print("Reconocida una suma válida:", p[1], "+", p[3])
+    p[0] = p[1] + p[3] if isinstance(p[1], (int, float)) and isinstance(p[3], (int, float)) else None
 
-# Lista de tokens creada por Brayan Briones git BrayanBriones
-tokens = (
-    # literales
-    'FLOAT', 'INTEGER', 'RATIONAL', 'COMPLEX',
-    'STR', 'SYMBOL', 'REGEXP',
+def p_valor_numero(p):
+    'valor : INTEGER'
+    p[0] = p[1]
 
-    # identificadores / variables (separados por tipo)
-    'GLOBAL_VAR', 'LOCAL_VAR', 'INSTANCE_VAR', 'CLASS_VAR', 'CONSTANT',
+def p_valor_variable(p):
+    'valor : LOCAL_VAR'
+    p[0] = p[1]
 
-
-    # comparación
-    'LT', 'LE', 'GT', 'GE', 'EQ', 'NE', 'EQQ', 'CMP', 'MATCH', 'NMATCH',
-
-    # lógicos
-    'ANDAND', 'OROR', 'BANG',
-
-    # rangos
-    'RANGE_INCL', 'RANGE_EXCL',
-
-    #cambio hecho por elias rubio git emrubio_85...
-
-    # operadores aritmeticos
-    'PLUS', 'MINUS', 'MULT', 'DIV', 'MOD', 'POWER',  # Power --> POTENCIACION
-
-    # operadores logicos bitwise
-    'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT',
-
-    # operadores asignacion
-    'EQLS', 'PLUSEQLS', 'MINUSEQLS', 'MULTEQLS', 'DIVEQLS', 'MODEQLS', 'POWEREQLS', 'QUESTION',
-
-    # delimitadores Juseperez
-    'LPAREN', 'RPAREN',
-    'LBRACKET', 'RBRACKET',
-    'LBRACE', 'RBRACE',
-    'COMMA', 'COLON', 'SEMICOLON', 'DOT', 'ARROW',
-    #'NEW_LINE',
-    'INTERPOLATION',
-
-#...fin cambio hecho por elias rubio git emrubio_85
-) + tuple(sorted(set(reserved.values())))
-
-errores_lexicos = []
-
-# Operadores multi-caracter creados por Brayan Briones git BrayanBriones
-
-def t_EQQ(t):
-    r'==='
-    return t
-
-def t_EQ(t):
-    r'=='
-    return t
-
-def t_NE(t):
-    r'!='
-    return t
-
-def t_CMP(t):
-    r'<=>'
-    return t
-
-def t_MATCH(t):
-    r'=~'
-    return t
-
-def t_NMATCH(t):
-    r'!~'
-    return t
-
-def t_LE(t):
-    r'<='
-    return t
-
-def t_GE(t):
-    r'>='
-    return t
-
-def t_RANGE_EXCL(t):
-    r'\.\.\.'
-    return t
-
-def t_RANGE_INCL(t):
-    r'\.\.'
-    return t
-
-def t_ANDAND(t):
-    r'&&'
-    return t
-
-def t_OROR(t):
-    r'\|\|'
-    return t
-
-def t_ARROW(t):
-    r'=>'
-    return t
-
-#cambio hecho por elias rubio git emrubio_85...
-def t_PLUSEQLS(t):
-    r'\+\='
-    return t
-def t_MINUSEQLS(t):
-    r'-\='
-    return t
-def t_MULTEQLS(t):
-    r'\*\='
-    return t
-def t_POWEREQLS(t):
-    r'\*\*\='
-    return t
-def t_DIVEQLS(t):
-    r'/\='
-    return t
-def t_MODEQLS(t):
-    r'%\='
-    return t
-def t_B_RIGHT_SHIFT(t):
-    r'>>'
-    return t
-def t_B_LEFT_SHIFT(t):
-    r'<<'
-    return t
-
-#...fin cambio hecho por elias rubio git emrubio_85
-
-
-# Operadores de Comparacion creados por Brayan Briones git BrayanBriones
-t_LT     = r'<'
-t_GT     = r'>'
-t_BANG   = r'!'
-t_DOT    = r'\.'
-
-#Delimitadores Juseperez
-t_LPAREN   = r'\('
-t_RPAREN   = r'\)'
-t_LBRACKET = r'\['
-t_RBRACKET = r'\]'
-t_LBRACE   = r'\{'
-t_RBRACE   = r'\}'
-t_COMMA    = r','
-t_COLON    = r':'
-t_SEMICOLON = r';'
-
-#cambio hecho por elias rubio git emrubio_85...
-
-t_SUMA = r'\+'
-t_RESTA = r'-'
-t_MULTI = r'\*'
-t_DIV = r'/'
-t_MOD = r'%'
-t_POTE = r'\*\*'
-t_EQLS  = r'='
-t_B_AND = r'&'
-t_B_OR = r'\|'
-t_B_XOR = r'\^'
-t_B_ONES = r'~'
-t_QUESTION = r'\?'
-#...fin cambio hecho por elias rubio git emrubio_85
-
-# String Ruby creado por Brayan Briones git BrayanBriones:
-# - "..." con escapes y \#\{...\} (interpolación no anidada aquí)
-# - '...' con escapes básicos
-# - %q/%Q con { }, ( ), [ ], < >
-#   Se implementa en una sola regex para cumplir con PLY.
-
-#Juseperez Interpolación
-def t_INTERPOLATION(t):
-    r'\#\{[^}]*\}'
-    return t
-
-
-def t_STR(t):
-    r'"([^"\\]|\\.|\#\{[^}]*\})*"|\'([^\'\\]|\\.)*\'|%[Qq](\{[^}]*\}|\([^)]*\)|\[[^\]]*\]|<[^>]*>)'
-    return t
-
-# Heredoc básico: <<LABEL, <<-LABEL, <<~LABEL
-# Tokenizado como STR creado por Brayan Briones git BrayanBriones
-def t_HEREDOC(t):
-    r'<<[-~]?[A-Za-z_]\w*'
-    m = re.match(r'<<(?:[-~]?)([A-Za-z_]\w*)', t.value)
-    label = m.group(1)
-    allow_indent = '-' in t.value or '~' in t.value
-    start = t.lexer.lexpos
-    data = t.lexer.lexdata
-
-    # saltar hasta fin de línea del inicio de heredoc
-    nl = data.find('\n', start)
-    if nl == -1:
-        t.type = 'STR'
-        t.value = ''
-        t.lexer.lexpos = start
-        return t
-    content_start = nl + 1
-
-    # patrón de terminación
-    if allow_indent:
-        end_pat = r'^[ \t]*' + re.escape(label) + r'[ \t]*\r?\n'
+def p_error(p):
+    if p:
+        mensaje = f"Error de sintaxis con el token '{p.value}' en la línea {p.lineno}"
     else:
-        end_pat = r'^' + re.escape(label) + r'[ \t]*\r?\n'
+        mensaje = "Error de sintaxis al final de la entrada"
+    print(mensaje)
+    errores_sintacticos.append(mensaje)
 
-    end_re = re.compile(end_pat, re.MULTILINE)
-    m_end = end_re.search(data, content_start)
-    if m_end:
-        content_end = m_end.start()
-        t.value = data[content_start:content_end]
-        t.type = 'STR'
-        t.lexer.lexpos = m_end.end()
-        # sumar líneas consumidas (contenido + línea del terminador)
-        t.lexer.lineno += t.value.count('\n') + 1
-        return t
-    else:
-        # sin terminador: consumir hasta el final
-        t.value = data[content_start:]
-        t.type = 'STR'
-        t.lexer.lexpos = len(data)
-        t.lexer.lineno += t.value.count('\n')
-        return t
+# Build the parser
+parser = yacc.yacc()
 
-# Símbolos :ident o :"string con espacios"
-def t_SYMBOL(t):
-    r':([A-Za-z_]\w*|"(?:[^"\\]|\\.)*")'
-    return t
-
-# Expresiones regulares /.../flags  (colocar antes de DIVIDE)
-def t_REGEXP(t):
-    r'/([^/\\]|\\.)*/[imxounse]*'
-    return t
-
-# Identificadores / variables / constantes / métodos ? ! = creados por Brayan Briones git BrayanBriones
-# Se separan por tipo: CLASS_VAR (@@), INSTANCE_VAR (@), GLOBAL_VAR ($), CONSTANT (Mayúsculas), LOCAL_VAR (identificador normal).
-# Las palabras reservadas se asignan desde 'reserved' para LOCAL_VAR.
-def t_CLASS_VAR(t):
-    r'@@[A-Za-z_]\w*'
-    return t
-
-def t_INSTANCE_VAR(t):
-    r'@[A-Za-z_]\w*'
-    return t
-
-def t_GLOBAL_VAR(t):
-    r'\$(?:[A-Za-z_]\w*|\d+)'
-    return t
-
-def t_CONSTANT(t):
-    r'__?[A-Z][A-Za-z_]\w*__?|[A-Z][A-Za-z_]\w*'
-    # Mantener tokens especiales como __ENCODING__ si están en reserved
-    if t.value in reserved:
-        t.type = reserved[t.value]
-    return t
-
-def t_LOCAL_VAR(t):
-    r'[A-Za-z_]\w*[!?=]?'
-    # mapear a palabra reservada si corresponde (e.g., if, while, def)
-    if t.value in reserved:
-        t.type = reserved[t.value]
-    return t
-
-# Números: racionales y complejos simples
-def t_RATIONAL(t):
-    r'(?:\d+/\d+|\d+)r'
-    t.value = t.value
-    return t
-
-def t_COMPLEX(t):
-    r'(?:\d+(?:\.\d+)?[+-]\d+(?:\.\d+)?i|\d+(?:\.\d+)?i)'
-    t.value = t.value
-    return t
-
-def t_FLOAT(t):
-    r'\d+\.\d+(?:[eE][+-]?\d+)?'
-    # mantener semántica original (no castear a float)
-    t.value = t.value
-    return t
-
-def t_INTEGER(t):
-    r'\d+'
-    t.value = int(t.value)
-    return t
-
-
-#----------------
-#Aporte Juseperez
-#----------------
-
-#Comentarios
-
-def t_comment_single(t):
-    r'\#.*'
-    pass
-
-# Comentarios de bloque: =begin ... =end (líneas propias)
-states = (('MLC','exclusive'),)
-t_MLC_ignore = ' \t'
-def t_begin_mlc(t):
-    r'=begin[^\n]*\n'
-    t.lexer.push_state('MLC')
-
-def t_MLC_end(t):
-    r'\n=end[^\n]*'
-    t.lexer.pop_state()
-
-def t_MLC_any(t):
-    r'.'
-    pass
-
-def t_MLC_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-
-    #Salto de línea
-
-'''def t_NEW_LINE(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-    t.value = "\\n"
-    return t
-    '''
-
-
-
-# Define a rule so we can track line numbers
-def t_newline(t):
-    r'\n+'
-    t.lexer.lineno += len(t.value)
-
-# A string containing ignored characters (spaces and tabs)
-t_ignore  = ' \t'
-
-# Error handling rule
-def t_error(t):
-    mensaje_error =f"Componente léxico {t.value[0]} no existe en Ruby en la línea {t.lexer.lineno}"
-    print(mensaje_error)
-    errores_lexicos.append(mensaje_error)
-    t.lexer.skip(1)
-
-def t_MLC_error(t):
-    t.lexer.skip(1)
-def analizar_archivo(nombre_archivo, usuario):
-    lexer = lex.lex()
-
-    #Rutas de carpetas
-    carpeta_algoritmos = "algoritmos"
-    carpeta_logs = "logs"
+def analizar_sintaxis(nombre_archivo, usuario):
+    global errores_sintacticos
+    errores_sintacticos = []  # reiniciar errores cada análisis
 
     # Crear carpetas si no existen
-    os.makedirs(carpeta_algoritmos, exist_ok=True)
-    os.makedirs(carpeta_logs, exist_ok=True)
+    os.makedirs("algoritmos", exist_ok=True)
+    os.makedirs("logs", exist_ok=True)
 
-    # Ruta completa del archivo Ruby
-    ruta_archivo = os.path.join(carpeta_algoritmos, nombre_archivo)
+    ruta_archivo = os.path.join("algoritmos", nombre_archivo)
 
     # Leer archivo Ruby
     try:
-        with open(ruta_archivo, 'r', encoding='utf-8') as f:
+        with open(ruta_archivo, "r", encoding="utf-8") as f:
             data = f.read()
     except FileNotFoundError:
         print(f"[ERROR] No se encontró el archivo: {ruta_archivo}")
         return
 
-    lexer.input(data)
+    print(f"Analizando sintaxis de: {ruta_archivo}")
+    parser.parse(data)
 
-    # Crear nombre de log
-    ahora = datetime.now().strftime("%d-%m-%Y-%Hh%M")
-    #ahora = datetime.now(ZoneInfo("America/Guayaquil")).strftime("%d-%m-%Y-%Hh%M") #Solo activar en github Codespace
-    nombre_log = f"lexico-{usuario}-{ahora}.txt"
-    ruta_log = os.path.join(carpeta_logs, nombre_log)
+    # Crear log
+    ahora = datetime.datetime.now().strftime("%d%m%Y-%Hh%M")
+    nombre_log = f"sintactico-{usuario}-{ahora}.txt"
+    ruta_log = os.path.join("logs", nombre_log)
 
-    # Escribir log
-    with open(ruta_log, 'w', encoding='utf-8') as log:
-        log.write(f"Log de análisis léxico del algoritmo: {ruta_archivo}\n")
+    with open(ruta_log, "w", encoding="utf-8") as log:
+        log.write(f"LOG de análisis sintáctico: {ruta_archivo}\n")
         log.write(f"Usuario: {usuario}\n")
-        log.write(f"Fecha y hora: {ahora}\n\n")
+        log.write(f"Fecha y hora: {ahora}\n")
+        log.write("=" * 50 + "\n")
 
-        while True:
-            tok = lexer.token()
-            if not tok:
-                break
-            log.write(f"Token: {tok.type}\tValor: {tok.value}\tLínea: {tok.lineno}\n")
-            print(tok)
+        if errores_sintacticos:
+            log.write("Errores sintácticos encontrados:\n")
+            for e in errores_sintacticos:
+                log.write(f"- {e}\n")
+        else:
+            log.write("Sin errores sintácticos.\n")
 
-        if errores_lexicos:
-            log.write("\nERRORES LÉXICOS DETECTADOS\n")
-            for e in errores_lexicos:
-                log.write(f"{e}\n")
+    print(f"Log generado en: {ruta_log}")
 
-    print(f"Log creado en: {ruta_log}")
-
+# -------------------------------------------------
+# Ejecución principal con selección de usuario/archivo
+# -------------------------------------------------
 if __name__ == "__main__":
     print("Seleccione el algoritmo a analizar:")
     print("1 - algoritmo1E.rb (emrubio85)")
@@ -415,10 +82,10 @@ if __name__ == "__main__":
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
-        analizar_archivo("algoritmo1E.rb", "emrubio85")
+        analizar_sintaxis("algoritmo1E.rb", "emrubio85")
     elif opcion == "2":
-        analizar_archivo("algoritmo2B.rb", "BrayanBriones")
+        analizar_sintaxis("algoritmo2B.rb", "BrayanBriones")
     elif opcion == "3":
-        analizar_archivo("algoritmo3J.rb", "Juseperez")
+        analizar_sintaxis("algoritmo3J.rb", "Juseperez")
     else:
         print("Opción no válida.")

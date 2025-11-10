@@ -1,0 +1,6 @@
+LOG de análisis sintáctico: algoritmos\algoritmo3J.rb
+Usuario: Juseperez
+Fecha y hora: 10112025-00h23
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token 'A' en la línea 3

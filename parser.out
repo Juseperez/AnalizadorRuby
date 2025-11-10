@@ -1,0 +1,283 @@
+Created by PLY version 3.11 (http://www.dabeaz.com/ply)
+
+Unused terminals:
+
+    ALIAS
+    AND
+    ANDAND
+    ARROW
+    BANG
+    BEGIN_S
+    BEGIN_U
+    BREAK
+    B_AND
+    B_LEFT_SHIFT
+    B_ONES
+    B_OR
+    B_RIGHT_SHIFT
+    B_XOR
+    CASE
+    CLASS
+    CLASS_VAR
+    CMP
+    COLON
+    COMMA
+    COMPLEX
+    CONSTANT
+    DEF
+    DEFINEDQ
+    DIV
+    DIVEQLS
+    DO
+    DOT
+    ELSE
+    ELSIF
+    ENCODING
+    END_S
+    END_U
+    ENSURE
+    EQ
+    EQLS
+    EQQ
+    FALSE
+    FILE
+    FLOAT
+    FOR
+    GE
+    GLOBAL_VAR
+    GT
+    IF
+    IN
+    INSTANCE_VAR
+    INTERPOLATION
+    LBRACE
+    LBRACKET
+    LE
+    LINE
+    LPAREN
+    LT
+    MATCH
+    MINUS
+    MINUSEQLS
+    MOD
+    MODEQLS
+    MODULE
+    MULT
+    MULTEQLS
+    NE
+    NEXT
+    NIL
+    NMATCH
+    NOT
+    OR
+    OROR
+    PLUSEQLS
+    POWER
+    POWEREQLS
+    PRINT
+    PUTS
+    QUESTION
+    RANGE_EXCL
+    RANGE_INCL
+    RATIONAL
+    RBRACE
+    RBRACKET
+    REDO
+    REGEXP
+    RESCUE
+    RETRY
+    RETURN
+    RPAREN
+    SELF
+    SEMICOLON
+    STR
+    SUPER
+    SYMBOL
+    THEN
+    TRUE
+    UNDEF
+    UNLESS
+    UNTIL
+    WHEN
+    WHILE
+    YIELD
+
+Grammar
+
+Rule 0     S' -> expresion
+Rule 1     expresion -> valor PLUS valor
+Rule 2     valor -> INTEGER
+Rule 3     valor -> LOCAL_VAR
+
+Terminals, with rules where they appear
+
+ALIAS                : 
+AND                  : 
+ANDAND               : 
+ARROW                : 
+BANG                 : 
+BEGIN_S              : 
+BEGIN_U              : 
+BREAK                : 
+B_AND                : 
+B_LEFT_SHIFT         : 
+B_ONES               : 
+B_OR                 : 
+B_RIGHT_SHIFT        : 
+B_XOR                : 
+CASE                 : 
+CLASS                : 
+CLASS_VAR            : 
+CMP                  : 
+COLON                : 
+COMMA                : 
+COMPLEX              : 
+CONSTANT             : 
+DEF                  : 
+DEFINEDQ             : 
+DIV                  : 
+DIVEQLS              : 
+DO                   : 
+DOT                  : 
+ELSE                 : 
+ELSIF                : 
+ENCODING             : 
+END_S                : 
+END_U                : 
+ENSURE               : 
+EQ                   : 
+EQLS                 : 
+EQQ                  : 
+FALSE                : 
+FILE                 : 
+FLOAT                : 
+FOR                  : 
+GE                   : 
+GLOBAL_VAR           : 
+GT                   : 
+IF                   : 
+IN                   : 
+INSTANCE_VAR         : 
+INTEGER              : 2
+INTERPOLATION        : 
+LBRACE               : 
+LBRACKET             : 
+LE                   : 
+LINE                 : 
+LOCAL_VAR            : 3
+LPAREN               : 
+LT                   : 
+MATCH                : 
+MINUS                : 
+MINUSEQLS            : 
+MOD                  : 
+MODEQLS              : 
+MODULE               : 
+MULT                 : 
+MULTEQLS             : 
+NE                   : 
+NEXT                 : 
+NIL                  : 
+NMATCH               : 
+NOT                  : 
+OR                   : 
+OROR                 : 
+PLUS                 : 1
+PLUSEQLS             : 
+POWER                : 
+POWEREQLS            : 
+PRINT                : 
+PUTS                 : 
+QUESTION             : 
+RANGE_EXCL           : 
+RANGE_INCL           : 
+RATIONAL             : 
+RBRACE               : 
+RBRACKET             : 
+REDO                 : 
+REGEXP               : 
+RESCUE               : 
+RETRY                : 
+RETURN               : 
+RPAREN               : 
+SELF                 : 
+SEMICOLON            : 
+STR                  : 
+SUPER                : 
+SYMBOL               : 
+THEN                 : 
+TRUE                 : 
+UNDEF                : 
+UNLESS               : 
+UNTIL                : 
+WHEN                 : 
+WHILE                : 
+YIELD                : 
+error                : 
+
+Nonterminals, with rules where they appear
+
+expresion            : 0
+valor                : 1 1
+
+Parsing method: LALR
+
+state 0
+
+    (0) S' -> . expresion
+    (1) expresion -> . valor PLUS valor
+    (2) valor -> . INTEGER
+    (3) valor -> . LOCAL_VAR
+
+    INTEGER         shift and go to state 3
+    LOCAL_VAR       shift and go to state 4
+
+    expresion                      shift and go to state 1
+    valor                          shift and go to state 2
+
+state 1
+
+    (0) S' -> expresion .
+
+
+
+state 2
+
+    (1) expresion -> valor . PLUS valor
+
+    PLUS            shift and go to state 5
+
+
+state 3
+
+    (2) valor -> INTEGER .
+
+    PLUS            reduce using rule 2 (valor -> INTEGER .)
+    $end            reduce using rule 2 (valor -> INTEGER .)
+
+
+state 4
+
+    (3) valor -> LOCAL_VAR .
+
+    PLUS            reduce using rule 3 (valor -> LOCAL_VAR .)
+    $end            reduce using rule 3 (valor -> LOCAL_VAR .)
+
+
+state 5
+
+    (1) expresion -> valor PLUS . valor
+    (2) valor -> . INTEGER
+    (3) valor -> . LOCAL_VAR
+
+    INTEGER         shift and go to state 3
+    LOCAL_VAR       shift and go to state 4
+
+    valor                          shift and go to state 6
+
+state 6
+
+    (1) expresion -> valor PLUS valor .
+
+    $end            reduce using rule 1 (expresion -> valor PLUS valor .)
+

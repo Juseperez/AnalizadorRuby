@@ -38,6 +38,20 @@ def p_statement_list_multi(p):
 def p_statement_list_single(p):
     'statement_list : statement'
     p[0] = [p[1]]
+
+def p_stmt_block_single(p):
+    'stmt_block : statement'
+    # Representamos bloque como lista de sentencias
+    p[0] = [p[1]]
+
+def p_stmt_block_multi(p):
+    'stmt_block : LBRACE statement_list RBRACE'
+    # Si usas llaves para agrupar bloques
+    p[0] = p[2]
+
+def p_stmt_block_list(p):
+    'stmt_block : statement_list'
+    p[0] = p[1]
 # --------------------------------------------------
 # STATEMENTS ASIGNADOS
 # --------------------------------------------------
@@ -49,6 +63,8 @@ def p_statement(p):
                  | for_stmt
                  | hash_literal
                  | function_def
+                 | if_stmt
+                 | stmt_block
                  | expression'''
     p[0] = p[1]
 
@@ -119,6 +135,42 @@ def p_for_stmt(p):
         # for i in expr stmts end
         p[0] = ('for', p[2], p[4], p[5])
 
+#elias rubio
+def p_if_stmt_basic(p):
+    'if_stmt : IF expression stmt_block END_S'
+    p[0] = ('if', p[2], p[3], [], None)
+
+def p_if_stmt_else(p):
+    'if_stmt : IF expression stmt_block ELSE stmt_block END_S'
+    p[0] = ('if', p[2], p[3], [], ('else', p[5]))
+
+def p_if_stmt_elsif(p):
+    'if_stmt : IF expression stmt_block elsif_list END_S'
+    p[0] = ('if', p[2], p[3], p[4], None)
+
+def p_if_stmt_elsif_else(p):
+    'if_stmt : IF expression stmt_block elsif_list ELSE stmt_block END_S'
+    p[0] = ('if', p[2], p[3], p[4], ('else', p[6]))
+
+# --------------------------------------------------
+# Lista de ELSIF: right-recursive, 
+# Cada elemento: ('elsif', condicion, bloque)
+# --------------------------------------------------
+def p_elsif_list_single(p):
+    'elsif_list : ELSIF expression stmt_block'
+    p[0] = [('elsif', p[2], p[3])]
+
+def p_elsif_list_more(p):
+    'elsif_list : ELSIF expression stmt_block elsif_list'
+    # colocamos el primero al inicio de la lista
+    p[0] = [('elsif', p[2], p[3])] + p[5]
+
+# --------------------------------------------------
+# else_block 
+# --------------------------------------------------
+def p_else_block(p):
+    'else_block : ELSE stmt_block'
+    p[0] = ('else', p[2])
 # --------------------------------------------------
 # EXPRESIONES LÓGICAS / DE COMPARACIÓN
 # --------------------------------------------------
@@ -144,6 +196,13 @@ def p_expression_compare(p):
                           | expression MATCH expression
                           | expression NMATCH expression'''
     p[0] = ('cmp', p[2], p[1], p[3])
+
+
+def p_expression_not(p):
+    'expression : NOT expression'
+    # ('not', expr)
+    p[0] = ('not', p[2])
+
 
 # --------------------------------------------------
 # ESTRUCTURA DE DATOS: HASH
@@ -195,6 +254,72 @@ def p_expression_range(p):
     '''expression : expression RANGE_INCL expression
                   | expression RANGE_EXCL expression'''
     p[0] = ('range', p[2], p[1], p[3])
+
+#-------------------------
+#array emrubio
+#--------------------------
+# 1) Lista de expresiones (para separar elementos del array) — right-recursive
+def p_expr_list_single(p):
+    'expr_list : expression'
+    p[0] = [p[1]]
+
+def p_expr_list_more(p):
+    'expr_list : expression COMMA expr_list'
+    p[0] = [p[1]] + p[3]
+
+# 2) Array literal: vacío o con elementos
+def p_array_literal_empty(p):
+    'array_literal : LBRACKET RBRACKET'
+    p[0] = ('array', [])
+
+def p_array_literal_elems(p):
+    'array_literal : LBRACKET expr_list RBRACKET'
+    p[0] = ('array', p[2])
+
+# 3) Primary (núcleo) — incluimos array_literal como primitivo
+def p_primary(p):
+    '''primary : INTEGER
+               | FLOAT
+               | STR
+               | SYMBOL
+               | LOCAL_VAR
+               | GLOBAL_VAR
+               | INSTANCE_VAR
+               | CLASS_VAR
+               | CONSTANT
+               | TRUE
+               | FALSE
+               | NIL
+               | LPAREN expression RPAREN
+               | array_literal'''
+    if len(p) == 2:
+        p[0] = p[1]
+    else:
+        # caso LPAREN expression RPAREN
+        p[0] = p[2]
+
+# 4) Postfix: permite indexado repetido (ej: a[0][1])
+#    Usamos left-recursion para encadenar índices: expr_postfix -> expr_postfix [ expr ]
+def p_expr_postfix_index(p):
+    'expr_postfix : expr_postfix LBRACKET expression RBRACKET'
+    # ('index', base_expr, index_expr)
+    p[0] = ('index', p[1], p[3])
+
+def p_expr_postfix_primary(p):
+    'expr_postfix : primary'
+    p[0] = p[1]
+
+# 5) Conectar postfix con expr_arith 
+def p_expr_arith_postfix(p):
+    'expr_arith : expr_postfix'
+    p[0] = p[1]
+
+def p_assignment_index(p):
+    'assignment : expr_postfix EQLS expression'
+    # ('array_assign', left_index_expr, value)
+    # left_index_expr puede ser ('index', base, idx) o un índice anidado ('index', ('index', base, i0), i1)
+    p[0] = ('array_assign', p[1], p[3])
+
 # --------------------------------------------------
 # TIPO DE FUNCIÓN: SIN RETORNO EXPLÍCITO
 # Ruby ya es así: def nombre ... end
@@ -234,7 +359,83 @@ def p_parameter(p):
 def p_empty(p):
     'empty :'
     p[0] = None
+# Elias Rubio
+# --------------------------------------------------
+# RETORNO (return expr)
+# --------------------------------------------------
+def p_return_stmt(p):
+    '''statement : RETURN
+                 | RETURN expression'''
+    if len(p) == 2:
+        # return sin valor
+        p[0] = ('return', None)
+    else:
+        # return con expresión
+        p[0] = ('return', p[2])
 
+# class_def admite:
+#  - class Nombre ... end
+#  - class Nombre < Padre ... end
+# El cuerpo de la clase es un stmt_block 
+def p_class_def(p):
+    '''class_def : CLASS CONSTANT stmt_block END_S
+                 | CLASS CONSTANT opt_inherit stmt_block END_S'''
+    # ('class', class_name, parent_or_None, body_list)
+    if len(p) == 5:
+        # class C <--- p[2] es CONSTANT, p[3] es stmt_block, p[4] es END_S
+        p[0] = ('class', p[2], None, p[3])
+    else:
+        # class C < Parent ... end
+        p[0] = ('class', p[2], p[3], p[5])
+
+# opt_inherit: opcionalmente ' < CONSTANT ' (herencia simple)
+def p_opt_inherit(p):
+    '''opt_inherit : LT CONSTANT
+                   | empty'''
+    if len(p) == 3:
+        p[0] = p[2]
+    else:
+        p[0] = None
+
+
+def p_statement_class(p):
+    'statement : class_def'
+    p[0] = p[1]
+
+# --------------------------------------------------
+# PROPIEDADES (variables de instancia / de clase)
+# --------------------------------------------------
+# En Ruby, normalmente dentro de la clase se usan assignments como:
+#   @name = "Elías"
+
+def p_property_decl(p):
+    '''property_decl : INSTANCE_VAR
+                     | CLASS_VAR'''
+    # ('prop', tipo, nombre_lexema)
+    p[0] = ('prop', p[1])
+
+# permitimos que property_decl sea un statement dentro de la clase (opcional)
+def p_statement_property(p):
+    'statement : property_decl'
+    p[0] = p[1]
+
+# --------------------------------------------------
+# MÉTODOS
+# --------------------------------------------------
+
+def p_method_from_def(p):
+    'method_def : function_def'
+    node = p[1]
+    if isinstance(node, tuple) and node and node[0] == 'def':
+        _, name, params, body = node
+        p[0] = ('method', name, params, body)
+    else:
+        p[0] = node
+
+# Permitimos que method_def sea una statement 
+def p_statement_method(p):
+    'statement : method_def'
+    p[0] = p[1]
 #--------------------------------------------------
 # EXPRESIONES (números, strings, vars, operaciones)
 # --------------------------------------------------
@@ -271,8 +472,6 @@ def p_expression_variable(p):
 def p_expression_uminus(p):
     '''expression : MINUS expression %prec UMINUS'''
     p[0] = ('uminus', p[2])
-
-
 
 def p_valor_numero(p):
     'valor : INTEGER'
@@ -344,7 +543,7 @@ if __name__ == "__main__":
     print("3 - algoritmo3J.rb (Juseperez)")
     print("4 - algoritmo4B.rb (BrayanBriones)")
     print("5 - algoritmo5J.rb (Juseperez)")
-
+    print("6 - algoritmo6E.rb (Emrubio85) ")
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
@@ -357,5 +556,7 @@ if __name__ == "__main__":
         analizar_sintaxis("algoritmo4B.rb", "BrayanBriones")
     elif opcion == "5":
         analizar_sintaxis("algoritmo5J.rb", "Juseperez")
+    elif opcion == "6":
+        analizar_sintaxis("algoritmo6E.rb", "emrubio85")
     else:
         print("Opción no válida.")

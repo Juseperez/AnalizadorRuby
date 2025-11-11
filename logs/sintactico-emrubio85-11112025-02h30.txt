@@ -1,0 +1,6 @@
+LOG de análisis sintáctico: algoritmos/algoritmo6E.rb
+Usuario: emrubio85
+Fecha y hora: 11112025-02h30
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token '==' en la línea 1

@@ -1,0 +1,8 @@
+LOG de análisis sintáctico: algoritmos/algoritmo6E.rb
+Usuario: emrubio85
+Fecha y hora: 11112025-03h12
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token '>' en la línea 2
+- Error de sintaxis con el token 'elsif' en la línea 5
+- Error de sintaxis con el token 'else' en la línea 7

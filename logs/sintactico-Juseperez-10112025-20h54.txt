@@ -1,0 +1,5 @@
+LOG de análisis sintáctico: algoritmos\algoritmo5J.rb
+Usuario: Juseperez
+Fecha y hora: 10112025-20h54
+==================================================
+Sin errores sintácticos.

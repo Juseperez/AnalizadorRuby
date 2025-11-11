@@ -46,6 +46,7 @@ def p_statement(p):
                  | input_stmt
                  | assignment
                  | while_stmt
+                 | for_stmt
                  | hash_literal
                  | function_def
                  | expression'''
@@ -104,6 +105,19 @@ def p_while_stmt(p):
     else:
         # while cond stmts end
         p[0] = ('while', p[2], p[3])
+
+# --------------------------------------------------
+# Jusepere ESTRUCTURA DE CONTROL: for ... in ... do ... end
+# --------------------------------------------------
+def p_for_stmt(p):
+    '''for_stmt : FOR LOCAL_VAR IN expression DO statement_list END_S
+                | FOR LOCAL_VAR IN expression statement_list END_S'''
+    if len(p) == 7:
+        # for i in expr do stmts end
+        p[0] = ('for', p[2], p[4], p[6])
+    else:
+        # for i in expr stmts end
+        p[0] = ('for', p[2], p[4], p[5])
 
 # --------------------------------------------------
 # EXPRESIONES LÓGICAS / DE COMPARACIÓN
@@ -173,7 +187,14 @@ def p_hash_pair_keywordstyle(p):
 def p_expression_hash(p):
     'expression : hash_literal'
     p[0] = p[1]
-    
+
+# --------------------------------------------------
+# Jusepere: ESTRUCTURA DE DATOS: range (1..10 o 1...10)
+# --------------------------------------------------
+def p_expression_range(p):
+    '''expression : expression RANGE_INCL expression
+                  | expression RANGE_EXCL expression'''
+    p[0] = ('range', p[2], p[1], p[3])
 # --------------------------------------------------
 # TIPO DE FUNCIÓN: SIN RETORNO EXPLÍCITO
 # Ruby ya es así: def nombre ... end
@@ -188,13 +209,31 @@ def p_function_def(p):
         # def foo(a, b) ... end
         p[0] = ('def', p[2], p[4], p[6])
 
-def p_param_list_multi(p):
-    'param_list : param_list COMMA LOCAL_VAR'
-    p[0] = p[1] + [p[3]]
+#Jusepere Parámetros opcionales
+def p_optional_params(p):
+    '''optional_params : param_list
+                       | empty'''
+    p[0] = p[1]
 
-def p_param_list_one(p):
-    'param_list : LOCAL_VAR'
-    p[0] = [p[1]]
+def p_param_list(p):
+    '''param_list : parameter
+                  | param_list COMMA parameter'''
+    if len(p) == 2:
+        p[0] = [p[1]]
+    else:
+        p[0] = p[1] + [p[3]]
+
+def p_parameter(p):
+    '''parameter : LOCAL_VAR
+                 | LOCAL_VAR EQLS expression'''
+    if len(p) == 2:
+        p[0] = (p[1], None)
+    else:
+        p[0] = (p[1], p[3])
+
+def p_empty(p):
+    'empty :'
+    p[0] = None
 
 #--------------------------------------------------
 # EXPRESIONES (números, strings, vars, operaciones)
@@ -304,6 +343,7 @@ if __name__ == "__main__":
     print("2 - algoritmo2B.rb (BrayanBriones)")
     print("3 - algoritmo3J.rb (Juseperez)")
     print("4 - algoritmo4B.rb (BrayanBriones)")
+    print("5 - algoritmo5J.rb (Juseperez)")
 
     opcion = input("Ingrese su opción: ").strip()
 
@@ -315,5 +355,7 @@ if __name__ == "__main__":
         analizar_sintaxis("algoritmo3J.rb", "Juseperez")
     elif opcion == "4":
         analizar_sintaxis("algoritmo4B.rb", "BrayanBriones")
+    elif opcion == "5":
+        analizar_sintaxis("algoritmo5J.rb", "Juseperez")
     else:
         print("Opción no válida.")

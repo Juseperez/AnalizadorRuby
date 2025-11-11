@@ -1,0 +1,9 @@
+LOG de análisis sintáctico: algoritmos\algoritmo5J.rb
+Usuario: Juseperez
+Fecha y hora: 10112025-20h57
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token '==' en la línea 35
+- Error de sintaxis con el token 'for' en la línea 37
+- Error de sintaxis con el token 'do' en la línea 37
+- Error de sintaxis al final de la entrada

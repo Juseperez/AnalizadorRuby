@@ -1,0 +1,10 @@
+LOG de análisis sintáctico: algoritmos\algoritmo5J.rb
+Usuario: Juseperez
+Fecha y hora: 10112025-20h48
+==================================================
+Errores sintácticos encontrados:
+- Error de sintaxis con el token 'return' en la línea 28
+- Error de sintaxis con el token ',' en la línea 39
+- Error de sintaxis con el token 'return' en la línea 40
+- Error de sintaxis con el token ',' en la línea 45
+- Error de sintaxis con el token 'end' en la línea 47

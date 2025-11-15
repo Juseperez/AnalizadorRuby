@@ -18,6 +18,197 @@ precedence = (
 
 
 errores_sintacticos = []
+# Errores encontrados en la fase semántica (añadidos por comprobaciones en reglas)
+errores_semanticos = []
+# Tabla de símbolos global: {nombre_var: {tipo: 'integer'|'float'|'string'|..., valor: ...}}
+tabla_simbolos = {}
+# Advertencias semánticas (castings indebidos, operaciones sospechosas)
+advertencias_semanticas = []
+
+
+def es_string_numerico_entero(valor_str):
+    """Verifica si un string es 100% numérico entero (ej: '123', '-45').
+    Devuelve True/False."""
+    if not isinstance(valor_str, str):
+        return False
+    valor_limpio = valor_str.strip()
+    if not valor_limpio:
+        return False
+    # permitir signo negativo al inicio
+    if valor_limpio[0] in ('+', '-'):
+        valor_limpio = valor_limpio[1:]
+    return valor_limpio.isdigit()
+
+
+def es_string_numerico_flotante(valor_str):
+    """Verifica si un string es 100% numérico flotante (ej: '3.14', '-2.5', '1e-5').
+    Devuelve True/False."""
+    if not isinstance(valor_str, str):
+        return False
+    valor_limpio = valor_str.strip()
+    if not valor_limpio:
+        return False
+    try:
+        float(valor_limpio)
+        return True
+    except ValueError:
+        return False
+
+
+def obtener_valor_string(node):
+    """Extrae el valor de string de un nodo AST.
+    Devuelve el string sin comillas, o None si no es un string literal."""
+    if node is None:
+        return None
+    
+    if isinstance(node, tuple):
+        if node[0] == 'lit' and len(node) > 1:
+            valor = node[1]
+            if isinstance(valor, str):
+                # Remover comillas si existen
+                if (valor.startswith('"') and valor.endswith('"')) or \
+                   (valor.startswith("'") and valor.endswith("'")):
+                    return valor[1:-1]
+                return valor
+        elif node[0] == 'var' and len(node) > 1:
+            # Si es una variable, buscar su valor en la tabla de símbolos
+            var_name = node[1]
+            if var_name in tabla_simbolos:
+                valor_info = tabla_simbolos[var_name].get('valor')
+                # Recursivamente obtener el valor
+                return obtener_valor_string(valor_info)
+    elif isinstance(node, str):
+        # Si es un string directo
+        if (node.startswith('"') and node.endswith('"')) or \
+           (node.startswith("'") and node.endswith("'")):
+            return node[1:-1]
+        return node
+    
+    return None
+
+
+def inferir_tipo_nodo(node):
+    """Inferir tipo simple a partir del nodo AST usado por el parser.
+    Devuelve 'integer', 'float', 'string', 'symbol', 'boolean', 'array', 'hash' o 'desconocido'.
+    """
+    if node is None:
+        return 'nil'
+    # literales numéricos: ('num', valor)
+    if isinstance(node, tuple):
+        tag = node[0]
+        if tag == 'num':
+            v = node[1]
+            if isinstance(v, int):
+                return 'integer'
+            if isinstance(v, float):
+                return 'float'
+            # t_FLOAT in lexer returns string like '3.14'
+            if isinstance(v, str):
+                if '.' in v or 'e' in v or 'E' in v:
+                    return 'float'
+                # fallback: digits only
+                if v.isdigit():
+                    return 'integer'
+                return 'desconocido'
+        if tag == 'lit':
+            val = node[1]
+            # STR tokens come as quoted strings or heredoc content
+            if isinstance(val, str):
+                if val.startswith(':'):
+                    return 'symbol'
+                # regexp like /.../ also as str, but treat as string for ops
+                return 'string'
+        if tag == 'str':
+            return 'string'
+        if tag == 'sym':
+            return 'symbol'
+        if tag == 'bool':
+            return 'boolean'
+        if tag == 'array':
+            return 'array'
+        if tag == 'hash':
+            return 'hash'
+        if tag == 'var':
+            # consultar tabla de símbolos
+            nombre = node[1]
+            if nombre in tabla_simbolos:
+                return tabla_simbolos[nombre].get('tipo', 'desconocido')
+            return 'desconocido'
+        if tag == 'call':
+            # ('call', objeto, método, args) -- soporte para llamadas a métodos
+            # .to_i, .to_f, .to_s, .to_a, etc.
+            metodo = node[2] if len(node) > 2 else ''
+            obj = node[1] if len(node) > 1 else None
+            
+            # Validar conversiones indebidas (castings inseguros)
+            if metodo == 'to_i':
+                # Verificar si el objeto es un string y validar su contenido
+                obj_tipo = inferir_tipo_nodo(obj)
+                if obj_tipo == 'string':
+                    # Intentar extraer el valor del string
+                    valor_string = obtener_valor_string(obj)
+                    if valor_string is not None:
+                        if not es_string_numerico_entero(valor_string):
+                            aviso = f"Error semántico: Casting indebido - '{valor_string}' no es 100% numérico. .to_i convertirá a 0 o valor parcial"
+                            errores_semanticos.append(aviso)
+                            print(aviso)
+                return 'integer'
+            
+            if metodo == 'to_f':
+                obj_tipo = inferir_tipo_nodo(obj)
+                if obj_tipo == 'string':
+                    valor_string = obtener_valor_string(obj)
+                    if valor_string is not None:
+                        if not es_string_numerico_flotante(valor_string):
+                            aviso = f"Error semántico: Casting indebido - '{valor_string}' no es 100% numérico. .to_f convertirá a 0.0 o valor parcial"
+                            errores_semanticos.append(aviso)
+                            print(aviso)
+                return 'float'
+            
+            if metodo == 'to_s' or metodo == 'to_str':
+                return 'string'
+            if metodo == 'to_a' or metodo == 'to_ary':
+                return 'array'
+            if metodo == 'to_h' or metodo == 'to_hash':
+                return 'hash'
+            # fallback: devolver tipo del objeto si no es conversión conocida
+            if node:
+                return inferir_tipo_nodo(node[1])
+            return 'desconocido'
+        if tag == 'func_call':
+            # ('func_call', nombre, args) -- soporte para llamadas a funciones
+            # Por defecto retornamos desconocido (habría que analizar definición)
+            return 'desconocido'
+        if tag == 'binop':
+            # inferir desde operandos
+            left_node = node[1] if len(node) > 1 else None
+            right_node = node[2] if len(node) > 2 else None
+            l = inferir_tipo_nodo(left_node)
+            r = inferir_tipo_nodo(right_node)
+            op = node[1] if len(node) > 1 else '?'
+            # el segundo índice es el operador, tercero es left, cuarto es right
+            # reordenar: node es ('binop', op, left, right)
+            if len(node) >= 4:
+                op = node[1]
+                l = inferir_tipo_nodo(node[2])
+                r = inferir_tipo_nodo(node[3])
+            if l == 'string' and r == 'string':
+                return 'string'
+            if l in ('integer', 'float') and r in ('integer', 'float'):
+                return 'float' if 'float' in (l, r) else 'integer'
+            return 'desconocido'
+    # si es literal simple
+    if isinstance(node, int):
+        return 'integer'
+    if isinstance(node, float):
+        return 'float'
+    if isinstance(node, str):
+        # comillas indican string literal
+        if node.startswith('"') or node.startswith("'"):
+            return 'string'
+        if node.startswith(':'):
+            return 'symbol'
+    return 'desconocido'
 # Lo comente porque me daba error cuando queria probar el algoritmo4
 #def p_expresion_suma(p):
 #    'expresion : valor PLUS valor'
@@ -106,6 +297,17 @@ def p_assignment(p):
                   | variable MODEQLS expression
                   | variable POWEREQLS expression'''
     # ('assign', ('var', x), '=', expr)
+    # Registrar tipo en tabla de símbolos
+    var_node = p[1]
+    if isinstance(var_node, tuple) and var_node[0] == 'var':
+        var_name = var_node[1]
+        # Validar la expresión (esto dispara verificaciones semánticas)
+        expr_tipo = inferir_tipo_nodo(p[3])
+        tabla_simbolos[var_name] = {
+            'tipo': expr_tipo,
+            'valor': p[3],
+            'operador': p[2]
+        }
     p[0] = ('assign', p[1], p[2], p[3])
 
 # --------------------------------------------------
@@ -137,19 +339,19 @@ def p_for_stmt(p):
 
 #elias rubio
 def p_if_stmt_basic(p):
-    'if_stmt : IF expression stmt_block END_S'
+    'if_stmt : IF expression_logic stmt_block END_S'
     p[0] = ('if', p[2], p[3], [], None)
 
 def p_if_stmt_else(p):
-    'if_stmt : IF expression stmt_block ELSE stmt_block END_S'
+    'if_stmt : IF expression_logic stmt_block ELSE stmt_block END_S'
     p[0] = ('if', p[2], p[3], [], ('else', p[5]))
 
 def p_if_stmt_elsif(p):
-    'if_stmt : IF expression stmt_block elsif_list END_S'
+    'if_stmt : IF expression_logic stmt_block elsif_list END_S'
     p[0] = ('if', p[2], p[3], p[4], None)
 
 def p_if_stmt_elsif_else(p):
-    'if_stmt : IF expression stmt_block elsif_list ELSE stmt_block END_S'
+    'if_stmt : IF expression_logic stmt_block elsif_list ELSE stmt_block END_S'
     p[0] = ('if', p[2], p[3], p[4], ('else', p[6]))
 
 # --------------------------------------------------
@@ -282,11 +484,7 @@ def p_primary(p):
                | FLOAT
                | STR
                | SYMBOL
-               | LOCAL_VAR
-               | GLOBAL_VAR
-               | INSTANCE_VAR
-               | CLASS_VAR
-               | CONSTANT
+               | variable
                | TRUE
                | FALSE
                | NIL
@@ -297,6 +495,19 @@ def p_primary(p):
     else:
         # caso LPAREN expression RPAREN
         p[0] = p[2]
+
+# 3b) Function call: variable_local(args)
+def p_function_call_expression(p):
+    '''expr_postfix : LOCAL_VAR LPAREN RPAREN
+                    | LOCAL_VAR LPAREN expr_list RPAREN'''
+    # ('func_call', nombre, [args])
+    func_name = p[1]
+    if len(p) == 4:
+        # func()
+        p[0] = ('func_call', func_name, [])
+    else:
+        # func(args)
+        p[0] = ('func_call', func_name, p[3])
 
 # 4) Postfix: permite indexado repetido (ej: a[0][1])
 #    Usamos left-recursion para encadenar índices: expr_postfix -> expr_postfix [ expr ]
@@ -446,6 +657,37 @@ def p_expression_binop(p):
                   | expression DIV expression
                   | expression MOD expression
                   | expression POWER expression'''
+    # comprobaciones semánticas básicas relacionadas con strings y conversiones
+    op = p[2]
+    left = p[1]
+    right = p[3]
+    left_t = inferir_tipo_nodo(left)
+    right_t = inferir_tipo_nodo(right)
+
+    # Regla: concatenación '+' sólo válida entre strings
+    if op == '+':
+        if left_t == 'string' and right_t == 'string':
+            pass  # válido
+        elif left_t == 'string' and right_t != 'string':
+            msg = f"Error semántico: No se puede concatenar String con {right_t}"
+            print(msg)
+            errores_semanticos.append(msg)
+        elif right_t == 'string' and left_t != 'string':
+            msg = f"Error semántico: No se puede concatenar {left_t} con String"
+            print(msg)
+            errores_semanticos.append(msg)
+
+    # Regla: operaciones aritméticas no válidas con strings
+    if op in ('-', '*', '/', '%', 'POWER'):
+        if left_t == 'string' or right_t == 'string':
+            msg = f"Error semántico: Operación '{op}' no permitida entre {left_t} y {right_t}"
+            print(msg)
+            errores_semanticos.append(msg)
+
+    # Regla: permitir conversiones numéricas implícitas entre integer y float
+    # No se hace nada aquí (aceptable): integer + float -> float
+    # Nota: conversiones explícitas (.to_i, .to_f) se manejan en p_method_call
+
     p[0] = ('binop', p[2], p[1], p[3])
 
 def p_expression_group(p):
@@ -468,6 +710,32 @@ def p_expression_literal(p):
 def p_expression_variable(p):
     'expression : variable'
     p[0] = p[1]
+
+def p_expression_postfix(p):
+    'expression : expr_postfix'
+    p[0] = p[1]
+
+# --------------------------------------------------
+# LLAMADAS A MÉTODOS (method calls)
+# Soporta: expr.metodo o expr.metodo(args)
+# Ej: "123".to_i, x.to_f, [1,2].length
+# --------------------------------------------------
+def p_method_call(p):
+    '''expr_postfix : expr_postfix DOT LOCAL_VAR
+                    | expr_postfix DOT LOCAL_VAR LPAREN RPAREN
+                    | expr_postfix DOT LOCAL_VAR LPAREN expr_list RPAREN'''
+    # ('call', objeto, método, [args] o None)
+    obj = p[1]
+    metodo = p[3]
+    if len(p) == 4:
+        # expression.metodo
+        p[0] = ('call', obj, metodo, [])
+    elif len(p) == 6:
+        # expression.metodo()
+        p[0] = ('call', obj, metodo, [])
+    else:
+        # expression.metodo(args)
+        p[0] = ('call', obj, metodo, p[5])
 
 def p_expression_uminus(p):
     '''expression : MINUS expression %prec UMINUS'''
@@ -544,6 +812,7 @@ if __name__ == "__main__":
     print("4 - algoritmo4B.rb (BrayanBriones)")
     print("5 - algoritmo5J.rb (Juseperez)")
     print("6 - algoritmo6E.rb (Emrubio85) ")
+    print("7 - algoritmo7B.rb (BrayanBriones) ")
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
@@ -558,5 +827,7 @@ if __name__ == "__main__":
         analizar_sintaxis("algoritmo5J.rb", "Juseperez")
     elif opcion == "6":
         analizar_sintaxis("algoritmo6E.rb", "emrubio85")
+    elif opcion == "7":
+        analizar_sintaxis("algoritmo7B.rb", "BrayanBriones")
     else:
         print("Opción no válida.")

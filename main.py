@@ -760,9 +760,9 @@ def p_error(p):
 # Build the parser
 parser = yacc.yacc()
 
-def analizar_sintaxis(nombre_archivo, usuario):
-    global errores_sintacticos
-    errores_sintacticos = []  # reiniciar errores cada análisis
+def analizar_semantica(nombre_archivo, usuario):
+    global errores_semanticos
+    errores_semanticos = []  # reiniciar errores cada análisis
 
     # Crear carpetas si no existen
     os.makedirs("algoritmos", exist_ok=True)
@@ -783,21 +783,21 @@ def analizar_sintaxis(nombre_archivo, usuario):
 
     # Crear log
     ahora = datetime.datetime.now().strftime("%d%m%Y-%Hh%M")
-    nombre_log = f"sintactico-{usuario}-{ahora}.txt"
+    nombre_log = f"semantico-{usuario}-{ahora}.txt"
     ruta_log = os.path.join("logs", nombre_log)
 
     with open(ruta_log, "w", encoding="utf-8") as log:
-        log.write(f"LOG de análisis sintáctico: {ruta_archivo}\n")
+        log.write(f"LOG de análisis semántico: {ruta_archivo}\n")
         log.write(f"Usuario: {usuario}\n")
         log.write(f"Fecha y hora: {ahora}\n")
         log.write("=" * 50 + "\n")
 
-        if errores_sintacticos:
-            log.write("Errores sintácticos encontrados:\n")
-            for e in errores_sintacticos:
+        if errores_semanticos:
+            log.write("Errores semánticos encontrados:\n")
+            for e in errores_semanticos:
                 log.write(f"- {e}\n")
         else:
-            log.write("Sin errores sintácticos.\n")
+            log.write("Sin errores semánticos.\n")
 
     print(f"Log generado en: {ruta_log}")
 
@@ -816,18 +816,18 @@ if __name__ == "__main__":
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
-        analizar_sintaxis("algoritmo1E.rb", "emrubio85")
+        analizar_semantica("algoritmo1E.rb", "emrubio85")
     elif opcion == "2":
-        analizar_sintaxis("algoritmo2B.rb", "BrayanBriones")
+        analizar_semantica("algoritmo2B.rb", "BrayanBriones")
     elif opcion == "3":
-        analizar_sintaxis("algoritmo3J.rb", "Juseperez")
+        analizar_semantica("algoritmo3J.rb", "Juseperez")
     elif opcion == "4":
-        analizar_sintaxis("algoritmo4B.rb", "BrayanBriones")
+        analizar_semantica("algoritmo4B.rb", "BrayanBriones")
     elif opcion == "5":
-        analizar_sintaxis("algoritmo5J.rb", "Juseperez")
+        analizar_semantica("algoritmo5J.rb", "Juseperez")
     elif opcion == "6":
-        analizar_sintaxis("algoritmo6E.rb", "emrubio85")
+        analizar_semantica("algoritmo6E.rb", "emrubio85")
     elif opcion == "7":
-        analizar_sintaxis("algoritmo7B.rb", "BrayanBriones")
+        analizar_semantica("algoritmo7B.rb", "BrayanBriones")
     else:
         print("Opción no válida.")

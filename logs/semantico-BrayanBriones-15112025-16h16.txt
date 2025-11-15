@@ -1,0 +1,10 @@
+LOG de análisis semántico: algoritmos/algoritmo7B.rb
+Usuario: BrayanBriones
+Fecha y hora: 15112025-16h16
+==================================================
+Errores semánticos encontrados:
+- Error semántico: Casting indebido - 'Juan' no es 100% numérico. .to_i convertirá a 0 o valor parcial
+- Error semántico: No se puede concatenar String con integer
+- Error semántico: Casting indebido - 'PROD-001-ABC' no es 100% numérico. .to_i convertirá a 0 o valor parcial
+- Error semántico: Operación '-' no permitida entre string y integer
+- Error semántico: Casting indebido - '3.14px' no es 100% numérico. .to_f convertirá a 0.0 o valor parcial

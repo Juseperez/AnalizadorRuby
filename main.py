@@ -24,7 +24,7 @@ errores_semanticos = []
 tabla_simbolos = {}
 # Advertencias semánticas (castings indebidos, operaciones sospechosas)
 advertencias_semanticas = []
-
+contexto_bucles = 0
 
 def es_string_numerico_entero(valor_str):
     """Verifica si un string es 100% numérico entero (ej: '123', '-45').
@@ -230,6 +230,23 @@ def p_statement_list_single(p):
     'statement_list : statement'
     p[0] = [p[1]]
 
+
+# Jusepere BREAK
+def p_statement_break(p):
+    'statement : BREAK'
+    linea = p.lineno(1)
+    if contexto_bucles <= 0:
+        errores_semanticos.append(f"Error: break fuera de estructura iterativa. (línea {linea})")
+    p[0] = ('break', linea)
+
+
+# Jusepere NEXT
+def p_statement_next(p):
+    'statement : NEXT'
+    linea = p.lineno(1)
+    if contexto_bucles <= 0:
+        errores_semanticos.append(f"Error: next fuera de estructura iterativa. (línea {linea})")
+    p[0] = ('next', linea)
 def p_stmt_block_single(p):
     'stmt_block : statement'
     # Representamos bloque como lista de sentencias
@@ -314,28 +331,39 @@ def p_assignment(p):
 # ESTRUCTURA DE CONTROL: while ... end
 # while <cond> do ... end  o  while <cond> ... end
 # --------------------------------------------------
+#Jusepere Validar el uso correcto de break y next dentro de bucles.
 def p_while_stmt(p):
-    '''while_stmt : WHILE expression_logic DO statement_list END_S
-                  | WHILE expression_logic statement_list END_S'''
-    if len(p) == 6:
-        # while cond do stmts end
-        p[0] = ('while', p[2], p[4])
-    else:
-        # while cond stmts end
-        p[0] = ('while', p[2], p[3])
+    '''while_stmt : WHILE expression_logic while_enter DO statement_list END_S while_exit
+                  | WHILE expression_logic while_enter statement_list END_S while_exit'''
+    p[0] = ('while', p[2], p[5])
+
+def p_while_enter(p):
+    'while_enter :'
+    global contexto_bucles
+    contexto_bucles += 1
+
+def p_while_exit(p):
+    'while_exit :'
+    global contexto_bucles
+    contexto_bucles -= 1
 
 # --------------------------------------------------
 # Jusepere ESTRUCTURA DE CONTROL: for ... in ... do ... end
 # --------------------------------------------------
 def p_for_stmt(p):
-    '''for_stmt : FOR LOCAL_VAR IN expression DO statement_list END_S
-                | FOR LOCAL_VAR IN expression statement_list END_S'''
-    if len(p) == 7:
-        # for i in expr do stmts end
-        p[0] = ('for', p[2], p[4], p[6])
-    else:
-        # for i in expr stmts end
-        p[0] = ('for', p[2], p[4], p[5])
+    '''for_stmt : FOR LOCAL_VAR IN expression for_enter DO statement_list END_S for_exit
+                | FOR LOCAL_VAR IN expression for_enter statement_list END_S for_exit'''
+    p[0] = ('for', p[2], p[4], p[7])
+
+def p_for_enter(p):
+    'for_enter :'
+    global contexto_bucles
+    contexto_bucles += 1
+
+def p_for_exit(p):
+    'for_exit :'
+    global contexto_bucles
+    contexto_bucles -= 1
 
 #elias rubio
 def p_if_stmt_basic(p):
@@ -813,6 +841,7 @@ if __name__ == "__main__":
     print("5 - algoritmo5J.rb (Juseperez)")
     print("6 - algoritmo6E.rb (Emrubio85) ")
     print("7 - algoritmo7B.rb (BrayanBriones) ")
+    print("8 - algoritmo8J.rb (Juseperez) ")
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
@@ -829,5 +858,7 @@ if __name__ == "__main__":
         analizar_semantica("algoritmo6E.rb", "emrubio85")
     elif opcion == "7":
         analizar_semantica("algoritmo7B.rb", "BrayanBriones")
+    elif opcion == "8":
+        analizar_semantica("algoritmo8J.rb", "Juseperez")
     else:
         print("Opción no válida.")

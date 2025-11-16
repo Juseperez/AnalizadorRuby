@@ -1,0 +1,9 @@
+LOG de análisis semántico: algoritmos\algoritmo8J.rb
+Usuario: Juseperez
+Fecha y hora: 15112025-20h17
+==================================================
+Errores semánticos encontrados:
+- Error: break fuera de estructura iterativa. (línea 4)
+- Error: next fuera de estructura iterativa. (línea 8)
+- Error: next fuera de estructura iterativa. (línea 22)
+- Error: break fuera de estructura iterativa. (línea 32)

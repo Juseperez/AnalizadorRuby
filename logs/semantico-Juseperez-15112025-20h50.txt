@@ -1,0 +1,11 @@
+LOG de análisis semántico: algoritmos\algoritmo8J.rb
+Usuario: Juseperez
+Fecha y hora: 15112025-20h50
+==================================================
+Errores semánticos encontrados:
+- Error: break fuera de estructura iterativa. (línea 6)
+- Error: next fuera de estructura iterativa. (línea 10)
+- Error: next fuera de estructura iterativa. (línea 24)
+- Error: break fuera de estructura iterativa. (línea 34)
+Advertencias semánticas encontradas:
+- Advertencia semántica: Reasignación de constante 'MI_CONSTANTE' en línea 2

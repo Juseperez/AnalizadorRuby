@@ -1,3 +1,5 @@
+MI_CONSTANTE = 10
+MI_CONSTANTE = 20  # Esto generará advertencia
 x = 10
 
 # ERROR: break fuera de bucle

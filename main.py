@@ -305,6 +305,7 @@ def p_variable(p):
                 | CONSTANT'''
     p[0] = ('var', p[1])
 
+
 def p_assignment(p):
     '''assignment : variable EQLS expression
                   | variable PLUSEQLS expression
@@ -313,18 +314,29 @@ def p_assignment(p):
                   | variable DIVEQLS expression
                   | variable MODEQLS expression
                   | variable POWEREQLS expression'''
-    # ('assign', ('var', x), '=', expr)
-    # Registrar tipo en tabla de símbolos
+
     var_node = p[1]
     if isinstance(var_node, tuple) and var_node[0] == 'var':
         var_name = var_node[1]
-        # Validar la expresión (esto dispara verificaciones semánticas)
+
+        # VERIFICACIÓN DE REASIGNACIÓN DE CONSTANTE
+        if var_name.isupper() or var_name.startswith('__') and var_name.endswith('__'):
+            # Es una constante (mayúsculas o __CONSTANT__)
+            if var_name in tabla_simbolos:
+                # La constante ya existe, es una reasignación
+                linea = p.lineno(2)  # Línea donde está el operador de asignación
+                advertencia = f"Advertencia semántica: Reasignación de constante '{var_name}' en línea {linea}"
+                advertencias_semanticas.append(advertencia)
+                print(advertencia)
+
+        # Registrar tipo en tabla de símbolos
         expr_tipo = inferir_tipo_nodo(p[3])
         tabla_simbolos[var_name] = {
             'tipo': expr_tipo,
             'valor': p[3],
             'operador': p[2]
         }
+
     p[0] = ('assign', p[1], p[2], p[3])
 
 # --------------------------------------------------
@@ -826,6 +838,14 @@ def analizar_semantica(nombre_archivo, usuario):
                 log.write(f"- {e}\n")
         else:
             log.write("Sin errores semánticos.\n")
+
+
+        if advertencias_semanticas:
+            log.write("Advertencias semánticas encontradas:\n")
+            for a in advertencias_semanticas:
+                log.write(f"- {a}\n")
+        else:
+            log.write("Sin advertencias semánticas.\n")
 
     print(f"Log generado en: {ruta_log}")
 

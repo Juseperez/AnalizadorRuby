@@ -25,6 +25,7 @@ tabla_simbolos = {}
 # Advertencias semánticas (castings indebidos, operaciones sospechosas)
 advertencias_semanticas = []
 contexto_bucles = 0
+contexto_if = 0
 
 def es_string_numerico_entero(valor_str):
     """Verifica si un string es 100% numérico entero (ej: '123', '-45').
@@ -252,6 +253,10 @@ def p_stmt_block_single(p):
     # Representamos bloque como lista de sentencias
     p[0] = [p[1]]
 
+def p_stmt_block_multiple(p):
+    "stmt_block : stmt_block statement"
+    p[0] = p[1] + [p[2]]
+
 def p_stmt_block_multi(p):
     'stmt_block : LBRACE statement_list RBRACE'
     # Si usas llaves para agrupar bloques
@@ -272,7 +277,10 @@ def p_statement(p):
                  | hash_literal
                  | function_def
                  | if_stmt
+                 | optional_then
                  | stmt_block
+                 | elsif_list
+                 | else_part
                  | expression'''
     p[0] = p[1]
 
@@ -378,41 +386,127 @@ def p_for_exit(p):
     contexto_bucles -= 1
 
 #elias rubio
-def p_if_stmt_basic(p):
-    'if_stmt : IF expression_logic stmt_block END_S'
-    p[0] = ('if', p[2], p[3], [], None)
+# regla para una sentencia simple
 
-def p_if_stmt_else(p):
-    'if_stmt : IF expression_logic stmt_block ELSE stmt_block END_S'
-    p[0] = ('if', p[2], p[3], [], ('else', p[5]))
+try:
+    contexto_if
+except NameError:
+    contexto_if = 0
 
-def p_if_stmt_elsif(p):
-    'if_stmt : IF expression_logic stmt_block elsif_list END_S'
-    p[0] = ('if', p[2], p[3], p[4], None)
+def semantica_if_inicio():
+    global contexto_if
+    contexto_if += 1
 
-def p_if_stmt_elsif_else(p):
-    'if_stmt : IF expression_logic stmt_block elsif_list ELSE stmt_block END_S'
-    p[0] = ('if', p[2], p[3], p[4], ('else', p[6]))
 
-# --------------------------------------------------
-# Lista de ELSIF: right-recursive, 
-# Cada elemento: ('elsif', condicion, bloque)
-# --------------------------------------------------
-def p_elsif_list_single(p):
-    'elsif_list : ELSIF expression stmt_block'
-    p[0] = [('elsif', p[2], p[3])]
+def semantica_if_fin():
+    global contexto_if
+    if contexto_if > 0:
+        contexto_if -= 1
 
-def p_elsif_list_more(p):
-    'elsif_list : ELSIF expression stmt_block elsif_list'
-    # colocamos el primero al inicio de la lista
-    p[0] = [('elsif', p[2], p[3])] + p[5]
 
-# --------------------------------------------------
-# else_block 
-# --------------------------------------------------
-def p_else_block(p):
-    'else_block : ELSE stmt_block'
-    p[0] = ('else', p[2])
+def semantica_elsif_check(lineno=None):
+    if contexto_if == 0:
+        msg = "Error semántico: 'elsif' fuera de un 'if'."
+        if lineno:
+            msg = f"Línea {lineno}: {msg}"
+        errores_semanticos.append(msg)
+
+def semantica_else_check(lineno=None):
+    if contexto_if == 0:
+        msg = "Error semántico: 'else' fuera de un 'if'."
+        if lineno:
+            msg = f"Línea {lineno}: {msg}"
+        errores_semanticos.append(msg)
+
+# ---------------------------
+# Reglas sintácticas 
+# ---------------------------
+
+# 
+def p_if_stmt(p):
+    """if_stmt : IF expression_logic optional_then stmt_block elsif_list else_part END_S"""
+    # marca inicio de contexto IF
+    semantica_if_inicio()
+    try:
+        
+        p[0] = ('if', p[2], p[4], p[5], p[6])
+    finally:
+        
+        semantica_if_fin()
+
+# optional THEN
+def p_optional_then_present(p):
+    "optional_then : THEN"
+    p[0] = 'THEN'
+
+def p_optional_then_empty(p):
+    "optional_then : empty"
+    p[0] = None
+
+# elsif_list left-recursive
+def p_elsif_list_empty(p):
+    "elsif_list : empty"
+    p[0] = []
+
+def p_elsif_list_left_recursive(p):
+    """elsif_list : elsif_list ELSIF expression_logic optional_then stmt_block"""
+    this = ('elsif', p[3], p[5])
+    p[0] = p[1] + [this]
+
+# else opcional
+def p_else_part_empty(p):
+    "else_part : empty"
+    p[0] = None
+
+def p_else_part(p):
+    "else_part : ELSE stmt_block"
+    # si ELSE aparece, comprobamos contexto semántico (por si aparece fuera de if)
+    try:
+        lineno = p.lineno(1)
+    except Exception:
+        lineno = None
+    semantica_else_check(lineno)
+    p[0] = p[2]
+
+# ---------------------------
+# Reglas para detectar ELSIF / ELSE sueltos como statement
+# ---------------------------
+
+def p_statement_invalid_elsif_full(p):
+    "statement : ELSIF expression_logic optional_then stmt_block"
+    try:
+        lineno = p.lineno(1)
+    except Exception:
+        lineno = None
+    semantica_elsif_check(lineno)    
+    p[0] = ('semantic_error', "elsif_fuera_de_if")
+
+def p_statement_invalid_elsif_short(p):
+    "statement : ELSIF expression"
+    try:
+        lineno = p.lineno(1)
+    except Exception:
+        lineno = None
+    semantica_elsif_check(lineno)
+    p[0] = ('semantic_error', "elsif_fuera_de_if")
+
+def p_statement_invalid_else_full(p):
+    "statement : ELSE stmt_block"
+    try:
+        lineno = p.lineno(1)
+    except Exception:
+        lineno = None
+    semantica_else_check(lineno)
+    p[0] = ('semantic_error', "else_fuera_de_if")
+
+def p_statement_invalid_else_short(p):
+    "statement : ELSE"
+    try:
+        lineno = p.lineno(1)
+    except Exception:
+        lineno = None
+    semantica_else_check(lineno)
+    p[0] = ('semantic_error', "else_fuera_de_if")
 # --------------------------------------------------
 # EXPRESIONES LÓGICAS / DE COMPARACIÓN
 # --------------------------------------------------
@@ -612,17 +706,169 @@ def p_empty(p):
     p[0] = None
 # Elias Rubio
 # --------------------------------------------------
-# RETORNO (return expr)
-# --------------------------------------------------
+
+# pila para contexto de funciones: cada elemento es dict { 'name': str, 'expected_return': tipo|None, 'returns': [tipo|None] }
+func_context_stack = []
+
+# --- util: normalizar/inferrar tipos sencillos desde nodos AST de expresion/literales ---
+def infer_type_from_expr(expr):
+    # expr puede ser un literal simple o un AST más complejo; adaptarlo a tu AST real
+    # Ejemplos manejados aquí: ('num', 42), ('str', "hola"), ('nil', None), ('bool', True), ('ident', 'a'), ('binop', op, left, right)
+    if expr is None:
+        return 'nil'
+    if isinstance(expr, tuple):
+        tag = expr[0]
+        if tag == 'num':      # número literal
+            return 'number'
+        if tag == 'str':
+            return 'string'
+        if tag == 'nil':
+            return 'nil'
+        if tag == 'bool':
+            return 'boolean'
+        if tag == 'ident':
+            # no podemos inferir el tipo de una variable simple aqui; devolver unknown
+            return 'unknown'
+        if tag == 'binop':
+            # ejemplo simplificado: si ambos operandos son number => number; si uno unknown => unknown
+            _, op, left, right = expr
+            lt = infer_type_from_expr(left)
+            rt = infer_type_from_expr(right)
+            if lt == 'number' and rt == 'number':
+                return 'number'
+            # otras heurísticas mínimas:
+            if lt == 'string' or rt == 'string':
+                # concatenación u otras operaciones con strings no manejadas aquí
+                return 'string'
+            return 'unknown'
+    # por defecto
+    return 'unknown'
+
+# --- helpers de contexto ---
+def func_enter(name, expected_return_type=None):
+    func_context_stack.append({
+        'name': name,
+        'expected_return': expected_return_type,  # 'number','string','boolean','nil' o None
+        'returns': []  # lista de tipos inferidos de cada return en el cuerpo
+    })
+
+def func_exit():
+    ctx = func_context_stack.pop() if func_context_stack else None
+    return ctx
+
+def func_current():
+    return func_context_stack[-1] if func_context_stack else None
+
+def check_return_against_expected(ret_type, lineno=None):
+    ctx = func_current()
+    if ctx is None:
+        # return fuera de función: podría ser un  semantico error
+        msg = "Error semántico: 'return' fuera de una función."
+        if lineno:
+            msg = f"Línea {lineno}: {msg}"
+        errores_semanticos.append(msg)
+        return
+
+    ctx['returns'].append(ret_type)
+
+    expected = ctx['expected_return']
+    if expected is None:
+        # si no hay anotación, intentamos inferir consistencia: si ya hay otros returns no-unknown,
+        # forzamos que coincidan entre sí 
+        non_unknown = [t for t in ctx['returns'] if t and t != 'unknown']
+        if len(non_unknown) >= 2 and len(set(non_unknown)) > 1:
+            # tipos distintos inferidos entre distintos returns
+            msg = f"Error: tipos de retorno inconsistentes en función '{ctx['name']}'."
+            if lineno:
+                msg = f"Línea {lineno}: {msg}"
+            errores_semanticos.append(msg)
+    else:
+        #  comprobar compatibilidad básica
+        # permitimos que 'nil'
+        compatible = False
+        if ret_type == expected:
+            compatible = True
+        elif ret_type == 'unknown':
+            
+            compatible = True
+        elif ret_type == 'nil' and expected != 'number' and expected != 'string':
+            
+            compatible = True
+        
+        if not compatible:
+            msg = f"Error: Tipo de retorno no coincide con expectativas {expected}."
+            if lineno:
+                msg = f"Línea {lineno}: {msg}"
+            errores_semanticos.append(msg)
+
+
+def p_function_def_with_ret(p):
+    '''function_def : DEF LOCAL_VAR optional_params optional_ret statement_list END_S'''
+    # p[2] nombre; p[3] params; p[4] anotacion de retorno (tipo string) o None; p[5] cuerpo
+    name = p[2]
+    params = p[3] or []
+    ret_annot = p[4]  # por ejemplo 'number','string', None
+    # al entrar en la función, registramos contexto
+    func_enter(name, ret_annot)
+    # NOTA: si quieres hacer checks mientras parseas los statement (ej. returns), las reglas de statement deben llamar a check_return...
+    # Aquí, construimos el AST y salimos del contexto
+    body = p[5]
+    ctx = func_exit()
+    p[0] = ('def', name, params, ret_annot, body)
+
+# regla para anotación de retorno opcional (ej: ':' TYPE)
+def p_optional_ret(p):
+    '''optional_ret : COLON TYPE
+                    | empty'''
+    if len(p) == 3:
+        
+        p[0] = p[2]
+    else:
+        p[0] = None
+
+
+# ---------------------------------------------------
+# Return: en la regla p_return_stmt se hace la comprobación semántica
+# ---------------------------------------------------
 def p_return_stmt(p):
     '''statement : RETURN
                  | RETURN expression'''
     if len(p) == 2:
-        # return sin valor
+        # return sin expresión => tipo 'nil'
+        ret_type = 'nil'
+        try:
+            lineno = p.lineno(1)
+        except Exception:
+            lineno = None
+        check_return_against_expected(ret_type, lineno)
         p[0] = ('return', None)
     else:
-        # return con expresión
-        p[0] = ('return', p[2])
+        expr = p[2]
+        ret_type = infer_type_from_expr(expr)
+        try:
+            lineno = p.lineno(1)
+        except Exception:
+            lineno = None
+        check_return_against_expected(ret_type, lineno)
+        p[0] = ('return', expr)
+
+# ---------------------------------------------------
+# Ejemplo simplificado de reglas de expresión para permitir inferencia
+# ---------------------------------------------------
+
+
+def p_expression_nil(p):
+    "expression : NIL"
+    p[0] = ('nil', None)
+
+def p_expression_bool_true(p):
+    "expression : TRUE"
+    p[0] = ('bool', True)
+
+def p_expression_bool_false(p):
+    "expression : FALSE"
+    p[0] = ('bool', False)
+
 
 # class_def admite:
 #  - class Nombre ... end
@@ -862,6 +1108,7 @@ if __name__ == "__main__":
     print("6 - algoritmo6E.rb (Emrubio85) ")
     print("7 - algoritmo7B.rb (BrayanBriones) ")
     print("8 - algoritmo8J.rb (Juseperez) ")
+    print("9 - algoritmo9E.rb (Elias Rubio) ")
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
@@ -880,5 +1127,7 @@ if __name__ == "__main__":
         analizar_semantica("algoritmo7B.rb", "BrayanBriones")
     elif opcion == "8":
         analizar_semantica("algoritmo8J.rb", "Juseperez")
+    elif opcion == "9":
+        analizar_semantica("algoritmo9E.rb", "Elias Rubio")
     else:
         print("Opción no válida.")

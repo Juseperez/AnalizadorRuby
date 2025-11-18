@@ -15,7 +15,7 @@ reserved = {
             'ensure': 'ENSURE', 'in': 'IN', 'module': 'MODULE', 'next': 'NEXT', 'not': 'NOT',
             'or': 'OR', 'redo': 'REDO', 'rescue': 'RESCUE', 'retry': 'RETRY', 'self': 'SELF',
             'super': 'SUPER', 'then': 'THEN', 'undef': 'UNDEF', 'unless': 'UNLESS', 'until': 'UNTIL',
-            'when': 'WHEN', 'yield': 'YIELD', "print": "PRINT", "puts": "PUTS",
+            'when': 'WHEN', 'yield': 'YIELD', "print": "PRINT", "puts": "PUTS", "type":"TYPE",
             }
 #...fin cambio hecho por elias rubio git emrubio_85
 
@@ -44,7 +44,7 @@ tokens = (
     'PLUS', 'MINUS', 'MULT', 'DIV', 'MOD', 'POWER',  # Power --> POTENCIACION
 
     # operadores logicos bitwise
-    'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT',
+    'B_AND', 'B_OR', 'B_XOR', 'B_ONES', 'B_LEFT_SHIFT', 'B_RIGHT_SHIFT', 
 
     # operadores asignacion
     'EQLS', 'PLUSEQLS', 'MINUSEQLS', 'MULTEQLS', 'DIVEQLS', 'MODEQLS', 'POWEREQLS', 'QUESTION',
@@ -251,6 +251,8 @@ def t_SYMBOL(t):
 def t_REGEXP(t):
     r'/([^/\\]|\\.)*/[imxounse]*'
     return t
+
+
 
 # Identificadores / variables / constantes / métodos ? ! = creados por Brayan Briones git BrayanBriones
 # Se separan por tipo: CLASS_VAR (@@), INSTANCE_VAR (@), GLOBAL_VAR ($), CONSTANT (Mayúsculas), LOCAL_VAR (identificador normal).

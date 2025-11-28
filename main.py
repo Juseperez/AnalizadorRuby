@@ -16,7 +16,6 @@ precedence = (
     ('right', 'UMINUS'),
 )
 
-
 errores_sintacticos = []
 # Errores encontrados en la fase semántica (añadidos por comprobaciones en reglas)
 errores_semanticos = []
@@ -25,8 +24,8 @@ tabla_simbolos = {}
 # Advertencias semánticas (castings indebidos, operaciones sospechosas)
 advertencias_semanticas = []
 contexto_bucles = 0
-contexto_if = 0
 
+contexto_if = 0
 def es_string_numerico_entero(valor_str):
     """Verifica si un string es 100% numérico entero (ej: '123', '-45').
     Devuelve True/False."""
@@ -61,14 +60,14 @@ def obtener_valor_string(node):
     Devuelve el string sin comillas, o None si no es un string literal."""
     if node is None:
         return None
-    
+
     if isinstance(node, tuple):
         if node[0] == 'lit' and len(node) > 1:
             valor = node[1]
             if isinstance(valor, str):
                 # Remover comillas si existen
                 if (valor.startswith('"') and valor.endswith('"')) or \
-                   (valor.startswith("'") and valor.endswith("'")):
+                        (valor.startswith("'") and valor.endswith("'")):
                     return valor[1:-1]
                 return valor
         elif node[0] == 'var' and len(node) > 1:
@@ -81,10 +80,10 @@ def obtener_valor_string(node):
     elif isinstance(node, str):
         # Si es un string directo
         if (node.startswith('"') and node.endswith('"')) or \
-           (node.startswith("'") and node.endswith("'")):
+                (node.startswith("'") and node.endswith("'")):
             return node[1:-1]
         return node
-    
+
     return None
 
 
@@ -140,7 +139,7 @@ def inferir_tipo_nodo(node):
             # .to_i, .to_f, .to_s, .to_a, etc.
             metodo = node[2] if len(node) > 2 else ''
             obj = node[1] if len(node) > 1 else None
-            
+
             # Validar conversiones indebidas (castings inseguros)
             if metodo == 'to_i':
                 # Verificar si el objeto es un string y validar su contenido
@@ -154,7 +153,7 @@ def inferir_tipo_nodo(node):
                             errores_semanticos.append(aviso)
                             print(aviso)
                 return 'integer'
-            
+
             if metodo == 'to_f':
                 obj_tipo = inferir_tipo_nodo(obj)
                 if obj_tipo == 'string':
@@ -165,7 +164,7 @@ def inferir_tipo_nodo(node):
                             errores_semanticos.append(aviso)
                             print(aviso)
                 return 'float'
-            
+
             if metodo == 'to_s' or metodo == 'to_str':
                 return 'string'
             if metodo == 'to_a' or metodo == 'to_ary':
@@ -210,8 +209,10 @@ def inferir_tipo_nodo(node):
         if node.startswith(':'):
             return 'symbol'
     return 'desconocido'
+
+
 # Lo comente porque me daba error cuando queria probar el algoritmo4
-#def p_expresion_suma(p):
+# def p_expresion_suma(p):
 #    'expresion : valor PLUS valor'
 #    print("Reconocida una suma válida:", p[1], "+", p[3])
 #    p[0] = p[1] + p[3] if isinstance(p[1], (int, float)) and isinstance(p[3], (int, float)) else None
@@ -223,9 +224,11 @@ def p_program(p):
     'program : statement_list'
     p[0] = ('program', p[1])
 
+
 def p_statement_list_multi(p):
     'statement_list : statement_list statement'
     p[0] = p[1] + [p[2]]
+
 
 def p_statement_list_single(p):
     'statement_list : statement'
@@ -248,6 +251,8 @@ def p_statement_next(p):
     if contexto_bucles <= 0:
         errores_semanticos.append(f"Error: next fuera de estructura iterativa. (línea {linea})")
     p[0] = ('next', linea)
+
+
 def p_stmt_block_single(p):
     'stmt_block : statement'
     # Representamos bloque como lista de sentencias
@@ -262,9 +267,12 @@ def p_stmt_block_multi(p):
     # Si usas llaves para agrupar bloques
     p[0] = p[2]
 
+
 def p_stmt_block_list(p):
     'stmt_block : statement_list'
     p[0] = p[1]
+
+
 # --------------------------------------------------
 # STATEMENTS ASIGNADOS
 # --------------------------------------------------
@@ -284,6 +292,7 @@ def p_statement(p):
                  | expression'''
     p[0] = p[1]
 
+
 # --------------------------------------------------
 # IMPRESIÓN (print / puts expr)
 # --------------------------------------------------
@@ -293,6 +302,7 @@ def p_print_stmt(p):
     # ('print', 'print', nodo_expr) o ('print', 'puts', nodo_expr)
     p[0] = ('print', p[1], p[2])
 
+
 # --------------------------------------------------
 # INGRESO DE DATOS POR TECLADO
 # patrón típico: nombre = gets
@@ -301,6 +311,7 @@ def p_input_stmt(p):
     'input_stmt : variable EQLS LOCAL_VAR'
     # ('input', ('var', nombre), 'gets')
     p[0] = ('input', p[1], p[3])
+
 
 # --------------------------------------------------
 # VARIABLES Y ASIGNACIÓN (todos los pertenecientes al analizador lexico)
@@ -347,51 +358,37 @@ def p_assignment(p):
 
     p[0] = ('assign', p[1], p[2], p[3])
 
+
 # --------------------------------------------------
 # ESTRUCTURA DE CONTROL: while ... end
 # while <cond> do ... end  o  while <cond> ... end
 # --------------------------------------------------
-#Jusepere Validar el uso correcto de break y next dentro de bucles.
+# Jusepere Validar el uso correcto de break y next dentro de bucles.
 def p_while_stmt(p):
     '''while_stmt : WHILE expression_logic while_enter DO statement_list END_S while_exit
                   | WHILE expression_logic while_enter statement_list END_S while_exit'''
     p[0] = ('while', p[2], p[5])
+
 
 def p_while_enter(p):
     'while_enter :'
     global contexto_bucles
     contexto_bucles += 1
 
+
 def p_while_exit(p):
     'while_exit :'
     global contexto_bucles
     contexto_bucles -= 1
 
-# --------------------------------------------------
-# Jusepere ESTRUCTURA DE CONTROL: for ... in ... do ... end
-# --------------------------------------------------
-def p_for_stmt(p):
-    '''for_stmt : FOR LOCAL_VAR IN expression for_enter DO statement_list END_S for_exit
-                | FOR LOCAL_VAR IN expression for_enter statement_list END_S for_exit'''
-    p[0] = ('for', p[2], p[4], p[7])
 
-def p_for_enter(p):
-    'for_enter :'
-    global contexto_bucles
-    contexto_bucles += 1
-
-def p_for_exit(p):
-    'for_exit :'
-    global contexto_bucles
-    contexto_bucles -= 1
-
-#elias rubio
 # regla para una sentencia simple
 
 try:
     contexto_if
 except NameError:
     contexto_if = 0
+
 
 def semantica_if_inicio():
     global contexto_if
@@ -411,6 +408,7 @@ def semantica_elsif_check(lineno=None):
             msg = f"Línea {lineno}: {msg}"
         errores_semanticos.append(msg)
 
+
 def semantica_else_check(lineno=None):
     if contexto_if == 0:
         msg = "Error semántico: 'else' fuera de un 'if'."
@@ -418,26 +416,29 @@ def semantica_else_check(lineno=None):
             msg = f"Línea {lineno}: {msg}"
         errores_semanticos.append(msg)
 
+
 # ---------------------------
-# Reglas sintácticas 
+# Reglas sintácticas
 # ---------------------------
 
-# 
+#
 def p_if_stmt(p):
     """if_stmt : IF expression_logic optional_then stmt_block elsif_list else_part END_S"""
     # marca inicio de contexto IF
     semantica_if_inicio()
     try:
-        
+
         p[0] = ('if', p[2], p[4], p[5], p[6])
     finally:
-        
+
         semantica_if_fin()
+
 
 # optional THEN
 def p_optional_then_present(p):
     "optional_then : THEN"
     p[0] = 'THEN'
+
 
 def p_optional_then_empty(p):
     "optional_then : empty"
@@ -472,13 +473,14 @@ def p_else_part(p):
 # Reglas para detectar ELSIF / ELSE sueltos como statement
 # ---------------------------
 
+
 def p_statement_invalid_elsif_full(p):
     "statement : ELSIF expression_logic optional_then stmt_block"
     try:
         lineno = p.lineno(1)
     except Exception:
         lineno = None
-    semantica_elsif_check(lineno)    
+    semantica_elsif_check(lineno)
     p[0] = ('semantic_error', "elsif_fuera_de_if")
 
 def p_statement_invalid_elsif_short(p):
@@ -508,6 +510,71 @@ def p_statement_invalid_else_short(p):
     semantica_else_check(lineno)
     p[0] = ('semantic_error', "else_fuera_de_if")
 # --------------------------------------------------
+# Jusepere ESTRUCTURA DE CONTROL: for ... in ... do ... end
+# --------------------------------------------------
+def p_for_stmt(p):
+    '''for_stmt : FOR LOCAL_VAR IN expression for_enter DO statement_list END_S for_exit
+                | FOR LOCAL_VAR IN expression for_enter statement_list END_S for_exit'''
+    p[0] = ('for', p[2], p[4], p[7])
+
+
+def p_for_enter(p):
+    'for_enter :'
+    global contexto_bucles
+    contexto_bucles += 1
+
+
+def p_for_exit(p):
+    'for_exit :'
+    global contexto_bucles
+    contexto_bucles -= 1
+
+
+# elias rubio
+def p_if_stmt_basic(p):
+    'if_stmt : IF expression_logic stmt_block END_S'
+    p[0] = ('if', p[2], p[3], [], None)
+
+
+def p_if_stmt_else(p):
+    'if_stmt : IF expression_logic stmt_block ELSE stmt_block END_S'
+    p[0] = ('if', p[2], p[3], [], ('else', p[5]))
+
+
+def p_if_stmt_elsif(p):
+    'if_stmt : IF expression_logic stmt_block elsif_list END_S'
+    p[0] = ('if', p[2], p[3], p[4], None)
+
+
+def p_if_stmt_elsif_else(p):
+    'if_stmt : IF expression_logic stmt_block elsif_list ELSE stmt_block END_S'
+    p[0] = ('if', p[2], p[3], p[4], ('else', p[6]))
+
+
+# --------------------------------------------------
+# Lista de ELSIF: right-recursive,
+# Cada elemento: ('elsif', condicion, bloque)
+# --------------------------------------------------
+def p_elsif_list_single(p):
+    'elsif_list : ELSIF expression stmt_block'
+    p[0] = [('elsif', p[2], p[3])]
+
+
+def p_elsif_list_more(p):
+    'elsif_list : ELSIF expression stmt_block elsif_list'
+    # colocamos el primero al inicio de la lista
+    p[0] = [('elsif', p[2], p[3])] + p[5]
+
+
+# --------------------------------------------------
+# else_block
+# --------------------------------------------------
+def p_else_block(p):
+    'else_block : ELSE stmt_block'
+    p[0] = ('else', p[2])
+
+
+# --------------------------------------------------
 # EXPRESIONES LÓGICAS / DE COMPARACIÓN
 # --------------------------------------------------
 def p_expression_logic_chain(p):
@@ -517,9 +584,11 @@ def p_expression_logic_chain(p):
                         | expression_logic OR expression_logic'''
     p[0] = ('logic', p[2], p[1], p[3])
 
+
 def p_expression_logic_simple(p):
     'expression_logic : expression_compare'
     p[0] = p[1]
+
 
 def p_expression_compare(p):
     '''expression_compare : expression LT expression
@@ -549,39 +618,48 @@ def p_hash_literal(p):
     # ('hash', [ ('pair', key, val), ... ])
     p[0] = ('hash', p[2])
 
+
 def p_hash_pairs_opt_empty(p):
     'hash_pairs_opt : '
     p[0] = []
+
 
 def p_hash_pairs_opt_list(p):
     'hash_pairs_opt : hash_pairs'
     p[0] = p[1]
 
+
 def p_hash_pairs_multi(p):
     'hash_pairs : hash_pairs COMMA hash_pair'
     p[0] = p[1] + [p[3]]
 
+
 def p_hash_pairs_one(p):
     'hash_pairs : hash_pair'
     p[0] = [p[1]]
+
 
 def p_hash_pair_arrow(p):
     'hash_pair : expression ARROW expression'
     # { expr => expr }
     p[0] = ('pair', p[1], p[3])
 
+
 def p_hash_pair_symbolstyle(p):
     'hash_pair : SYMBOL COLON expression'
     # { :sym: expr } o { nombre: expr }
     p[0] = ('pair', p[1], p[3])
 
+
 def p_hash_pair_keywordstyle(p):
     'hash_pair : LOCAL_VAR COLON expression'
     p[0] = ('pair', p[1], p[3])
 
+
 def p_expression_hash(p):
     'expression : hash_literal'
     p[0] = p[1]
+
 
 # --------------------------------------------------
 # Jusepere: ESTRUCTURA DE DATOS: range (1..10 o 1...10)
@@ -591,26 +669,31 @@ def p_expression_range(p):
                   | expression RANGE_EXCL expression'''
     p[0] = ('range', p[2], p[1], p[3])
 
-#-------------------------
-#array emrubio
-#--------------------------
+
+# -------------------------
+# array emrubio
+# --------------------------
 # 1) Lista de expresiones (para separar elementos del array) — right-recursive
 def p_expr_list_single(p):
     'expr_list : expression'
     p[0] = [p[1]]
 
+
 def p_expr_list_more(p):
     'expr_list : expression COMMA expr_list'
     p[0] = [p[1]] + p[3]
+
 
 # 2) Array literal: vacío o con elementos
 def p_array_literal_empty(p):
     'array_literal : LBRACKET RBRACKET'
     p[0] = ('array', [])
 
+
 def p_array_literal_elems(p):
     'array_literal : LBRACKET expr_list RBRACKET'
     p[0] = ('array', p[2])
+
 
 # 3) Primary (núcleo) — incluimos array_literal como primitivo
 def p_primary(p):
@@ -630,6 +713,7 @@ def p_primary(p):
         # caso LPAREN expression RPAREN
         p[0] = p[2]
 
+
 # 3b) Function call: variable_local(args)
 def p_function_call_expression(p):
     '''expr_postfix : LOCAL_VAR LPAREN RPAREN
@@ -643,6 +727,7 @@ def p_function_call_expression(p):
         # func(args)
         p[0] = ('func_call', func_name, p[3])
 
+
 # 4) Postfix: permite indexado repetido (ej: a[0][1])
 #    Usamos left-recursion para encadenar índices: expr_postfix -> expr_postfix [ expr ]
 def p_expr_postfix_index(p):
@@ -650,20 +735,24 @@ def p_expr_postfix_index(p):
     # ('index', base_expr, index_expr)
     p[0] = ('index', p[1], p[3])
 
+
 def p_expr_postfix_primary(p):
     'expr_postfix : primary'
     p[0] = p[1]
 
-# 5) Conectar postfix con expr_arith 
+
+# 5) Conectar postfix con expr_arith
 def p_expr_arith_postfix(p):
     'expr_arith : expr_postfix'
     p[0] = p[1]
+
 
 def p_assignment_index(p):
     'assignment : expr_postfix EQLS expression'
     # ('array_assign', left_index_expr, value)
     # left_index_expr puede ser ('index', base, idx) o un índice anidado ('index', ('index', base, i0), i1)
     p[0] = ('array_assign', p[1], p[3])
+
 
 # --------------------------------------------------
 # TIPO DE FUNCIÓN: SIN RETORNO EXPLÍCITO
@@ -679,11 +768,13 @@ def p_function_def(p):
         # def foo(a, b) ... end
         p[0] = ('def', p[2], p[4], p[6])
 
-#Jusepere Parámetros opcionales
+
+# Jusepere Parámetros opcionales
 def p_optional_params(p):
     '''optional_params : param_list
                        | empty'''
     p[0] = p[1]
+
 
 def p_param_list(p):
     '''param_list : parameter
@@ -693,6 +784,7 @@ def p_param_list(p):
     else:
         p[0] = p[1] + [p[3]]
 
+
 def p_parameter(p):
     '''parameter : LOCAL_VAR
                  | LOCAL_VAR EQLS expression'''
@@ -701,14 +793,19 @@ def p_parameter(p):
     else:
         p[0] = (p[1], p[3])
 
+
 def p_empty(p):
     'empty :'
     p[0] = None
+
+
 # Elias Rubio
 # --------------------------------------------------
-
+# RETORNO (return expr)
+# --------------------------------------------------
 # pila para contexto de funciones: cada elemento es dict { 'name': str, 'expected_return': tipo|None, 'returns': [tipo|None] }
 func_context_stack = []
+
 
 # --- util: normalizar/inferrar tipos sencillos desde nodos AST de expresion/literales ---
 def infer_type_from_expr(expr):
@@ -718,7 +815,7 @@ def infer_type_from_expr(expr):
         return 'nil'
     if isinstance(expr, tuple):
         tag = expr[0]
-        if tag == 'num':      # número literal
+        if tag == 'num':  # número literal
             return 'number'
         if tag == 'str':
             return 'string'
@@ -744,6 +841,7 @@ def infer_type_from_expr(expr):
     # por defecto
     return 'unknown'
 
+
 # --- helpers de contexto ---
 def func_enter(name, expected_return_type=None):
     func_context_stack.append({
@@ -752,12 +850,15 @@ def func_enter(name, expected_return_type=None):
         'returns': []  # lista de tipos inferidos de cada return en el cuerpo
     })
 
+
 def func_exit():
     ctx = func_context_stack.pop() if func_context_stack else None
     return ctx
 
+
 def func_current():
     return func_context_stack[-1] if func_context_stack else None
+
 
 def check_return_against_expected(ret_type, lineno=None):
     ctx = func_current()
@@ -774,7 +875,7 @@ def check_return_against_expected(ret_type, lineno=None):
     expected = ctx['expected_return']
     if expected is None:
         # si no hay anotación, intentamos inferir consistencia: si ya hay otros returns no-unknown,
-        # forzamos que coincidan entre sí 
+        # forzamos que coincidan entre sí
         non_unknown = [t for t in ctx['returns'] if t and t != 'unknown']
         if len(non_unknown) >= 2 and len(set(non_unknown)) > 1:
             # tipos distintos inferidos entre distintos returns
@@ -789,12 +890,12 @@ def check_return_against_expected(ret_type, lineno=None):
         if ret_type == expected:
             compatible = True
         elif ret_type == 'unknown':
-            
+
             compatible = True
         elif ret_type == 'nil' and expected != 'number' and expected != 'string':
-            
+
             compatible = True
-        
+
         if not compatible:
             msg = f"Error: Tipo de retorno no coincide con expectativas {expected}."
             if lineno:
@@ -816,12 +917,13 @@ def p_function_def_with_ret(p):
     ctx = func_exit()
     p[0] = ('def', name, params, ret_annot, body)
 
+
 # regla para anotación de retorno opcional (ej: ':' TYPE)
 def p_optional_ret(p):
     '''optional_ret : COLON TYPE
                     | empty'''
     if len(p) == 3:
-        
+
         p[0] = p[2]
     else:
         p[0] = None
@@ -852,6 +954,7 @@ def p_return_stmt(p):
         check_return_against_expected(ret_type, lineno)
         p[0] = ('return', expr)
 
+
 # ---------------------------------------------------
 # Ejemplo simplificado de reglas de expresión para permitir inferencia
 # ---------------------------------------------------
@@ -861,9 +964,11 @@ def p_expression_nil(p):
     "expression : NIL"
     p[0] = ('nil', None)
 
+
 def p_expression_bool_true(p):
     "expression : TRUE"
     p[0] = ('bool', True)
+
 
 def p_expression_bool_false(p):
     "expression : FALSE"
@@ -873,7 +978,7 @@ def p_expression_bool_false(p):
 # class_def admite:
 #  - class Nombre ... end
 #  - class Nombre < Padre ... end
-# El cuerpo de la clase es un stmt_block 
+# El cuerpo de la clase es un stmt_block
 def p_class_def(p):
     '''class_def : CLASS CONSTANT stmt_block END_S
                  | CLASS CONSTANT opt_inherit stmt_block END_S'''
@@ -884,6 +989,7 @@ def p_class_def(p):
     else:
         # class C < Parent ... end
         p[0] = ('class', p[2], p[3], p[5])
+
 
 # opt_inherit: opcionalmente ' < CONSTANT ' (herencia simple)
 def p_opt_inherit(p):
@@ -899,6 +1005,7 @@ def p_statement_class(p):
     'statement : class_def'
     p[0] = p[1]
 
+
 # --------------------------------------------------
 # PROPIEDADES (variables de instancia / de clase)
 # --------------------------------------------------
@@ -911,10 +1018,12 @@ def p_property_decl(p):
     # ('prop', tipo, nombre_lexema)
     p[0] = ('prop', p[1])
 
+
 # permitimos que property_decl sea un statement dentro de la clase (opcional)
 def p_statement_property(p):
     'statement : property_decl'
     p[0] = p[1]
+
 
 # --------------------------------------------------
 # MÉTODOS
@@ -929,11 +1038,14 @@ def p_method_from_def(p):
     else:
         p[0] = node
 
-# Permitimos que method_def sea una statement 
+
+# Permitimos que method_def sea una statement
 def p_statement_method(p):
     'statement : method_def'
     p[0] = p[1]
-#--------------------------------------------------
+
+
+# --------------------------------------------------
 # EXPRESIONES (números, strings, vars, operaciones)
 # --------------------------------------------------
 def p_expression_binop(p):
@@ -976,9 +1088,11 @@ def p_expression_binop(p):
 
     p[0] = ('binop', p[2], p[1], p[3])
 
+
 def p_expression_group(p):
     'expression : LPAREN expression RPAREN'
     p[0] = p[2]
+
 
 def p_expression_number(p):
     '''expression : INTEGER
@@ -987,19 +1101,23 @@ def p_expression_number(p):
                   | COMPLEX'''
     p[0] = ('num', p[1])
 
+
 def p_expression_literal(p):
     '''expression : STR
                   | SYMBOL
                   | REGEXP'''
     p[0] = ('lit', p[1])
 
+
 def p_expression_variable(p):
     'expression : variable'
     p[0] = p[1]
 
+
 def p_expression_postfix(p):
     'expression : expr_postfix'
     p[0] = p[1]
+
 
 # --------------------------------------------------
 # LLAMADAS A MÉTODOS (method calls)
@@ -1023,17 +1141,21 @@ def p_method_call(p):
         # expression.metodo(args)
         p[0] = ('call', obj, metodo, p[5])
 
+
 def p_expression_uminus(p):
     '''expression : MINUS expression %prec UMINUS'''
     p[0] = ('uminus', p[2])
+
 
 def p_valor_numero(p):
     'valor : INTEGER'
     p[0] = p[1]
 
+
 def p_valor_variable(p):
     'valor : LOCAL_VAR'
     p[0] = p[1]
+
 
 def p_error(p):
     if p:
@@ -1043,8 +1165,10 @@ def p_error(p):
     print(mensaje)
     errores_sintacticos.append(mensaje)
 
+
 # Build the parser
 parser = yacc.yacc()
+
 
 def analizar_semantica(nombre_archivo, usuario):
     global errores_semanticos
@@ -1085,7 +1209,6 @@ def analizar_semantica(nombre_archivo, usuario):
         else:
             log.write("Sin errores semánticos.\n")
 
-
         if advertencias_semanticas:
             log.write("Advertencias semánticas encontradas:\n")
             for a in advertencias_semanticas:
@@ -1094,6 +1217,7 @@ def analizar_semantica(nombre_archivo, usuario):
             log.write("Sin advertencias semánticas.\n")
 
     print(f"Log generado en: {ruta_log}")
+
 
 # -------------------------------------------------
 # Ejecución principal con selección de usuario/archivo
@@ -1108,7 +1232,6 @@ if __name__ == "__main__":
     print("6 - algoritmo6E.rb (Emrubio85) ")
     print("7 - algoritmo7B.rb (BrayanBriones) ")
     print("8 - algoritmo8J.rb (Juseperez) ")
-    print("9 - algoritmo9E.rb (Elias Rubio) ")
     opcion = input("Ingrese su opción: ").strip()
 
     if opcion == "1":
@@ -1127,7 +1250,23 @@ if __name__ == "__main__":
         analizar_semantica("algoritmo7B.rb", "BrayanBriones")
     elif opcion == "8":
         analizar_semantica("algoritmo8J.rb", "Juseperez")
-    elif opcion == "9":
-        analizar_semantica("algoritmo9E.rb", "Elias Rubio")
     else:
         print("Opción no válida.")
+
+
+def analizar_desde_gui(codigo):
+    """Función para que el GUI pueda analizar código directamente"""
+    global errores_sintacticos, errores_semanticos, advertencias_semanticas
+
+    # Limpiar errores previos
+    errores_sintacticos.clear()
+    errores_semanticos.clear()
+    advertencias_semanticas.clear()
+
+    try:
+        # Analizar el código
+        resultado = parser.parse(codigo)
+        return resultado
+    except Exception as e:
+        errores_sintacticos.append(f"Error durante el análisis: {str(e)}")
+        return None

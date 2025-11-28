@@ -1,0 +1,6 @@
+LOG de análisis semántico: algoritmos\algoritmo9E.rb
+Usuario: Elias Rubio
+Fecha y hora: 27112025-21h46
+==================================================
+Sin errores semánticos.
+Sin advertencias semánticas.

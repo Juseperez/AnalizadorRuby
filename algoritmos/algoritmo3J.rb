@@ -7,7 +7,6 @@ A
 
 #Delimitadores
 
-=begin
 x=5
 y=10; z=x+y
 
@@ -27,6 +26,6 @@ end
 =begin
 Este es un comentario
 de bloque
-=end
+
 
 

@@ -32,3 +32,12 @@ end
 
 # ERROR: break fuera de estructura iterativa
 break
+
+x == 5
+exclusive_range = 1...
+for i in 1..5 do
+  total = i * 2 + x
+def print_results(base = 10)
+  total = base + y * 2
+  puts "El total es, #{total}"
+endd
